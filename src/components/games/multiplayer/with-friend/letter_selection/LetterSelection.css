@@ -1,0 +1,30 @@
+.container{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.option{
+  border-style: solid;
+  border-color: black;
+  background-color: yellowgreen;
+  color: aliceblue;
+  padding: 30px;
+  font-size: 60px;
+  cursor: pointer;
+}
+
+.option-selected{
+  border-style: solid;
+  border-color: black;
+  background-color: rgb(51, 70, 14);
+  color: aliceblue;
+  padding: 30px;
+  font-size: 60px;
+  cursor: pointer;
+}
+
+.letter-selection{
+  text-align: center;
+  font-size: 25px;
+}
