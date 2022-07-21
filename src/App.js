@@ -16,9 +16,6 @@ function App() {
        <Router>
             <Routes>
               <Route path="/" element={<Home/>}/>
-    {/*           <CustomRoute exact path="/singleplayer/never-win" children={<ProvasResolvidas/>}/>
-              <CustomRoute exact path="/singleplayer/never-loose" children={<ProvaResolvida/>}/>
-              <CustomRoute exact path="/singleplayer/random-ia" children={<ProvasCriadas/>}/> */}
               <Route path="/singleplayer/never-win" element={<SinglePlayerGame ai_type={1}/>}/>
               <Route path="/singleplayer/always-win" element={<SinglePlayerGame ai_type={2}/>}/>
               <Route path="/singleplayer/random-ia" element={<SinglePlayerGame ai_type={3}/>}/>
