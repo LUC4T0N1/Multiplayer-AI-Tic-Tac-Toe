@@ -6,8 +6,10 @@ import GameLocalMultiplayer from "./components/games/multiplayer/local/GameLocal
 import SinglePlayerGame from "./components/games/singleplayer/SinglePlayerGame";
 import Queue from "./components/games/multiplayer/random-person/Queue";
 import { BrowserRouter as Router, Routes , Route } from "react-router-dom"
+import io from "socket.io-client";
 function App() {
 
+  const socket = io.connect(process.env.REACT_APP_SERVER_URL);
 
   return (
     <div className="App">
@@ -21,8 +23,8 @@ function App() {
               <Route path="/singleplayer/always-win" element={<SinglePlayerGame ai_type={2}/>}/>
               <Route path="/singleplayer/random-ia" element={<SinglePlayerGame ai_type={3}/>}/>
               <Route path="/multiplayer/local" element={<GameLocalMultiplayer/>}/>
-              <Route path="/multiplayer/friendly" element={<RoomSelection/>}/>
-              <Route path="/multiplayer/random" element={<Queue/>}/>
+              <Route path="/multiplayer/friendly" element={<RoomSelection socket={socket}/>}/>
+              <Route path="/multiplayer/random" element={<Queue socket={socket}/>}/>
               <Route path='*' element={<Error/>}></Route>
             </Routes>
           </Router>

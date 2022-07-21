@@ -1,10 +1,8 @@
-import io from "socket.io-client";
 import { useState } from "react";
 import MultiplayerWithFriend from "./MultiplayerWithFriend";
 
-const socket = io.connect(process.env.REACT_APP_SERVER_URL);
 
-function RoomSelection() {
+function RoomSelection({socket}) {
   const [username, setUsername] = useState("");
   const [room, setRoom] = useState("");
   const [showChat, setShowChat] = useState(false);
