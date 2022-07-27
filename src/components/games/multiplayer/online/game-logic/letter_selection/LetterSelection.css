@@ -1,3 +1,10 @@
+.letter-selection{
+  margin: 30px;
+  padding: 10px;
+  text-align: center;
+  font-size: 25px;
+}
+
 .container{
   display: flex;
   justify-content: center;
@@ -7,7 +14,7 @@
 .option{
   border-style: solid;
   border-color: black;
-  background-color: yellowgreen;
+  background-color: rgb(33, 190, 156);
   color: aliceblue;
   padding: 30px;
   font-size: 60px;
@@ -17,14 +24,9 @@
 .option-selected{
   border-style: solid;
   border-color: black;
-  background-color: rgb(51, 70, 14);
+  background-color: rgb(12, 88, 76);
   color: aliceblue;
   padding: 30px;
   font-size: 60px;
   cursor: pointer;
-}
-
-.letter-selection{
-  text-align: center;
-  font-size: 25px;
 }

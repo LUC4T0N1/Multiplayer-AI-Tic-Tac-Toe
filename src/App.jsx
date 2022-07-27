@@ -1,19 +1,32 @@
 import "./App.css";
+import React, { useContext } from 'react';
+import NavBar from "./components/navBar/NavBar";
 import Error from "./components/error/Error";
 import Home from "./components/home/Home";
-import RoomSelection from "./components/games/multiplayer/with-friend/RoomSelection";
+import RoomSelection from "./components/games/multiplayer/online/room-creation/friend/RoomSelection";
 import GameLocalMultiplayer from "./components/games/multiplayer/local/GameLocalMultiplayer";
 import SinglePlayerGame from "./components/games/singleplayer/SinglePlayerGame";
-import Queue from "./components/games/multiplayer/random-person/Queue";
+import Queue from "./components/games/multiplayer/online/room-creation/random/Queue";
 import { BrowserRouter as Router, Routes , Route } from "react-router-dom"
 import io from "socket.io-client";
+import { ThemeContext } from './infrastructure/context';
 function App() {
+  const theme = useContext(ThemeContext);
+  const darkMode = theme.state.darkMode;
 
   const socket = io.connect(process.env.REACT_APP_SERVER_URL);
 
   return (
-    <div className="App">
+    <>
+
+    <div className="App" style={{
+      backgroundColor: darkMode ? "#0A1416" : "#e1e8eb",
+      color: darkMode && "white",
+
+    }}>
+    
        <Router>
+       <NavBar/>
             <Routes>
               <Route path="/" element={<Home/>}/>
               <Route path="/singleplayer/never-win" element={<SinglePlayerGame ai_type={1}/>}/>
@@ -26,6 +39,7 @@ function App() {
             </Routes>
           </Router>
     </div>
+    </>
   );
 }
 

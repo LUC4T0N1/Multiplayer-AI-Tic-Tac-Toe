@@ -3,7 +3,7 @@ import "./LetterSelection.css";
 function LetterSelection({handleXSelection, xIsSelected, handleOSelection, oIsSelected}) {
   return (
     <div className='letter-selection'>
-        Choose your side
+        <p>Choose your side</p>
       <div className='container'>
         <button className={ (xIsSelected.selected === true) ? 'option' : 'option-selected'} onClick={() => handleXSelection()}>
             X

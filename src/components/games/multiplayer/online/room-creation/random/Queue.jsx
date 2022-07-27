@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
- import MultiplayerWithFriend from "../with-friend/MultiplayerWithFriend";
-
+import OnlineGame from "../../game-logic/OnlineGame";
+import JoinQueueForm from "./join-queue-form/JoinQueueForm";
 
 function Queue({socket}) {
   const [username, setUsername] = useState("");
   const [room, setRoom] = useState("");
   const [showChat, setShowChat] = useState(false);
   const [roomReady, setRoomReady] =  useState(false);
+  const [isOtherPlayerReady, setIsOtherPlayerReady] = useState(false);
 
   const joinRoom = () => {
     if (username !== "" ) {
@@ -18,6 +19,7 @@ function Queue({socket}) {
   useEffect(() => {
     socket.on("game_start", (data) => {
       console.log("jogo começando na sala " + data)
+      setIsOtherPlayerReady(true);
       setRoomReady(true);
       setRoom(data)
     });
@@ -26,17 +28,7 @@ function Queue({socket}) {
   return (
     <div className="App">
       {!showChat ? (
-        <div className="joinChatContainer">
-          <h3>Join A Chat</h3>
-          <input
-            type="text"
-            placeholder="Username"
-            onChange={(event) => {
-              setUsername(event.target.value);
-            }}
-          />
-          <button onClick={joinRoom}>Join Queue</button>
-        </div>
+        <JoinQueueForm setUsername={setUsername} joinRoom={joinRoom}/>
       ) : (
         <>
         {!roomReady ?
@@ -44,11 +36,8 @@ function Queue({socket}) {
             <p>You are in queue please wait</p>
           </>)
           :
-          <MultiplayerWithFriend socket={socket} username={username} room={room}/> 
-          }
-        
-{/*           <Chat socket={socket} username={username} room={room} /> */}
-          
+          <OnlineGame socket={socket} username={username} room={room} isOtherPlayerReady={isOtherPlayerReady} setIsOtherPlayerReady={setIsOtherPlayerReady}/> 
+          }          
         </>
       )}
     </div>

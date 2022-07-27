@@ -2,6 +2,7 @@ import React, {useEffect ,useState} from "react";
 import {checkIfTie, checkWin} from  "../../../utils/EndGame";
 import Board from "../../game/Board";
 import {findBestMove, findWorstMove, findRandomMove} from  "../../../utils/AILogic";
+import "../../game/Game.css"
 
 function SinglePlayerGame({ai_type}) {
   const [board, setBoard] = useState(["","","","","","","","",""])
@@ -29,26 +30,28 @@ const handleRestart = () => {
 }
 
 const handleAITurn = () => {
-  let square = null;
-    if(ai_type === 1) {
-      square = findBestMove({board, player});
-    }else if(ai_type === 2){
-      square = findWorstMove({board, player});
-    }else{
-      square = findRandomMove({board});
-    }
-    console.log("MAQUINA JOGOU " + square )
-    const currentPlayer = player === "O" ? "X" : "O";
-    setPlayer(currentPlayer); 
-     setBoard(
-    board.map((val, idx) => {
-        if (idx === square && val === "") {
-        return player;
+  if(turn === "O"){
+    let square = null;
+      if(ai_type === 1) {
+        square = findBestMove({board, player});
+      }else if(ai_type === 2){
+        square = findWorstMove({board, player});
+      }else{
+        square = findRandomMove({board});
       }
-      return val; 
-    })
-    );   
-    setTurn("X")
+      console.log("MAQUINA JOGOU " + square )
+      const currentPlayer = player === "O" ? "X" : "O";
+      setPlayer(currentPlayer); 
+      setBoard(
+      board.map((val, idx) => {
+          if (idx === square && val === "") {
+          return player;
+        }
+        return val; 
+      })
+      );   
+      setTurn("X")
+    }
 }
 
 
@@ -61,22 +64,25 @@ const handleAITurn = () => {
       setBoard(
         board.map((val, idx) => {
           if (idx === square && val === "") {
+            setTurn("O")
             return player;
           }
           return val;
         })
       );
-      setTurn("O")
+  
     }
   };
-
+ 
   return (
-    <>
+    <div className="full-game">
       <Board chooseSquare={chooseSquare} board={board}/>
-      {result.state === "won" && <div> {result.winner} Won The Game</div>}
-      {result.state === "tie" && <div> Game Tieds</div>}
-      {result.state !== "none" ? <button onClick={handleRestart}> RESTART GAME </button> : ""}
-    </>
+      <div className="end-game">
+        {result.state === "won" && <div> {result.winner} Won The Game</div>}
+        {result.state === "tie" && <div> Game Tieds</div>}
+        {result.state !== "none" ? <button className="restart-button" onClick={handleRestart}> RESTART GAME </button> : ""}
+      </div>
+    </div>
   )
 }
 

@@ -1,0 +1,39 @@
+.home{
+  display: grid;
+  justify-content: center;
+  align-items: center;  
+  width: 100vw;
+  height: 100vh;
+}
+
+.modes{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.specificModes{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.mode{
+  border: none;
+  padding: 35px;
+  background: linear-gradient(
+    to bottom right,
+    #007575,
+    rgb(3, 19, 19)
+    );
+  color: rgb(255, 255, 255);
+  border-radius: 30px;
+  font-weight: 500;
+  font-size: 30px;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.home-title{
+  font-size: 80px;
+}

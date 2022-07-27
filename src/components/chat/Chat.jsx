@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import ScrollToBottom from "react-scroll-to-bottom";
+import "./Chat.css";
 
 function Chat({ socket, username, room }) {
   const [currentMessage, setCurrentMessage] = useState("");
@@ -25,6 +26,7 @@ function Chat({ socket, username, room }) {
 
   useEffect(() => {
     socket.on("receive_message", (data) => {
+      console.log("MENSAGEM RECEBIDA! " + JSON.stringify(data))
       setMessageList((list) => [...list, data]);
     });
   }, [socket]);

@@ -1,0 +1,63 @@
+.joinFriendForm {
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.joinFriendForm h3 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+.joinFriendForm input {
+  width: 210px;
+  height: 40px;
+  margin: 7px;
+  border: 2px solid #05948d;
+  border-radius: 5px;
+  padding: 5px;
+  font-size: 16px;
+}
+
+.join-button{
+  width: 225px;
+  height: 50px;
+  margin: 7px;
+  border: none;
+  border-radius: 5px;
+  padding: 5px;
+  font-size: 16px;
+  background: #0b6e69;
+  color: #fff;
+  cursor: pointer;
+}
+
+.join-button:hover {
+  background: #2e2d2d;
+}
+
+.waiting-message{
+  display: flex;
+  text-align: center;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+  font-size: 80px;
+}
+
+.flex-container{
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-window{
+  margin-left: 50px;
+  margin-top: 100px;
+}
+
+.game{
+}
