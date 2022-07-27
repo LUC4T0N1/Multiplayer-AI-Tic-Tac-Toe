@@ -1,0 +1,47 @@
+{
+
+  "nav_about": "Sobre",
+  "nav_exp": "Experiência",
+  "nav_skills": "Habilidades",
+  "nav_projects": "Projetos",
+  "nav_contact": "Contato",
+
+  "hello": "Olá, meu nome é",
+  "job": "Desenvolvedor Web Full-Stack",
+  "bcc": "Bacharel em Ciência da Computação",
+  "bct": "Bacharel em Ciência e Tecnologia",
+  "intro_description": "Eu estruturo e desenvolvo sistemas web completos, passando pelo banco de dados, back end e front end",
+
+
+  "about_me": "Sobre Mim",
+  "about_me_p1": "Meu gosto por video games deu início à minha curiosidade por programação, que se tornou uma paixão desde que escrevi meu primeiro código, mais de 5 anos atrás.",
+  "about_me_p2": "Sempre buscando aprender mais todos os dias, para poder desenvolver sistemas cada vez melhores e que possam ajudar ainda mais as pessoas",
+  "about_me_p3": "Tudo é melhor quando se trabalha com o que ama.",
+
+
+  "projects": "Esses são meus principais projetos",
+  "projects_general_desc": "",
+
+  "my_contacts": "Meus Contatos",
+  "contact_desc": "Achou meu trabalho interessante? Vamos conversar! Me envie um e-mail com suas idéias.",
+
+  "user_name_placeholder": "Nome",
+  "subject_placeholder": "Assunto",
+  "message_placeholder": "Mensagem",
+  "user_name_required": "Seu nome é obrigatório",
+  "user_subject_required": "O assunto do e-mail é obrigatório!",
+  "user_email_required": "Seu e-mail é obrigatório!",
+  "invalid_user_email": "Formato do e-mail é inválido!",
+  "message_required": "A mensagem é obrigatória!",
+  "message_min_length": "A mensagem Deve ter pelo menos 15 caracteres!",
+  "submit_button": "Enviar",
+  "email_sent": "Obrigado pelo contato, irei te responder assim que possível!",
+  "email_error": "Algo deu errado.. tente novamente mais tarde",
+
+  "exp_title" : "Experiência e Educação",
+
+  "skills_title": "Principais Habilidades",
+
+  "resume": "CURRÍCULO"
+
+}
