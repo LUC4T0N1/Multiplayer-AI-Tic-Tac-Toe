@@ -5,7 +5,7 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import HttpApi from 'i18next-http-backend';
 
 import App from './App'; 
-
+import io from "socket.io-client";
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import 'flag-icon-css/css/flag-icons.min.css';
@@ -30,10 +30,11 @@ i18n
 
 
   const root = ReactDOM.createRoot(document.getElementById("root"));
+  const socket = io.connect(process.env.REACT_APP_SERVER_URL);
 
   root.render(
     <ThemeProvider>
-      <App/>
+      <App socket={socket}/>
     </ThemeProvider>
 );
 

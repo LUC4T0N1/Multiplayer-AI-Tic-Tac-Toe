@@ -3,7 +3,7 @@ import LetterSelection from "./letter_selection/LetterSelection";
 import Chat from "../../../../chat/Chat";
 import {checkIfTie, checkWin} from  "../../../../../utils/EndGame";
 import Board from "../../../../game/Board";
-import "../room-creation/RoomCreation.css"
+import "../../../../game/Game.css"
 
 const OnlineGame = ({ socket, username, room, isOtherPlayerReady, setIsOtherPlayerReady }) => {
 
@@ -128,13 +128,15 @@ const OnlineGame = ({ socket, username, room, isOtherPlayerReady, setIsOtherPlay
       {(!oIsSelected.selected || !xIsSelected.selected) ? <LetterSelection handleXSelection={handleXSelection} xIsSelected={xIsSelected} handleOSelection={handleOSelection} oIsSelected={oIsSelected}/> : 
       <>
       <div className="full-game">
-        <Board chooseSquare={chooseSquare} board={board}/>
-        <div className="end-game">
-          {result.state === "won" && <div> {result.winner} Won The Game</div>}
-          {result.state === "tie" && <div> Game Tieds</div>}
-          {result.state !== "none" ? <button  className="restart-button" onClick={handleRestart}> RESTART GAME </button> : ""}
-        </div>  
+      <div className="end-game">
+      {result.state === "won" && <div> {result.winner} Won The Game!</div>}
+      {result.state === "tie" && <div> Game Tieds!</div>}
       </div>
+      <Board chooseSquare={chooseSquare} board={board}/>
+      <div className="end-game">
+        {result.state !== "none" ? <button className="restart-button" onClick={handleRestart}> RESTART GAME </button> : ""}
+      </div>
+    </div>
       </> }    
 
 

@@ -41,12 +41,16 @@ const handleRestart = () => {
   };
 
   return (
-    <>
+    <div className="full-game">
+      <div className="end-game">
+      {result.state === "won" && <div> {result.winner} Won The Game!</div>}
+      {result.state === "tie" && <div> Game Tieds!</div>}
+      </div>
       <Board chooseSquare={chooseSquare} board={board}/>
-      {result.state === "won" && <div> {result.winner} Won The Game</div>}
-      {result.state === "tie" && <div> Game Tieds</div>}
-      {result.state !== "none" ? <button onClick={handleRestart}> RESTART GAME </button> : ""}
-    </>
+      <div className="end-game">
+        {result.state !== "none" ? <button className="restart-button" onClick={handleRestart}> RESTART GAME </button> : ""}
+      </div>
+    </div>
   )
 }
 

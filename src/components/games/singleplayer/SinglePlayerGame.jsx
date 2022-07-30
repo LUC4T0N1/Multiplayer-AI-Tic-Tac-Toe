@@ -76,10 +76,12 @@ const handleAITurn = () => {
  
   return (
     <div className="full-game">
+      <div className="end-game">
+      {result.state === "won" && <div> {result.winner} Won The Game!</div>}
+      {result.state === "tie" && <div> Game Tieds!</div>}
+      </div>
       <Board chooseSquare={chooseSquare} board={board}/>
       <div className="end-game">
-        {result.state === "won" && <div> {result.winner} Won The Game</div>}
-        {result.state === "tie" && <div> Game Tieds</div>}
         {result.state !== "none" ? <button className="restart-button" onClick={handleRestart}> RESTART GAME </button> : ""}
       </div>
     </div>

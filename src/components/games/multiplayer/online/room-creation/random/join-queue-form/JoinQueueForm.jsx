@@ -3,7 +3,8 @@ import "./JoinQueueForm.css"
 
 function JoinQueueForm({setUsername, joinRoom}) {
   return (
-    <div className="joinChatContainer">
+
+    <div className="joinFriendForm">
           <h3>Join A Chat</h3>
           <input
             type="text"
@@ -12,7 +13,7 @@ function JoinQueueForm({setUsername, joinRoom}) {
               setUsername(event.target.value);
             }}
           />
-          <button onClick={joinRoom}>Join Queue</button>
+          <button className='join-button' onClick={joinRoom}>Join Queue</button>
         </div>
   )
 }

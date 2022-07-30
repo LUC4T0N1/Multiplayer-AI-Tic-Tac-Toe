@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import OnlineGame from "../../game-logic/OnlineGame";
 import JoinQueueForm from "./join-queue-form/JoinQueueForm";
+import "../RoomCreation.css"
 
 function Queue({socket}) {
   const [username, setUsername] = useState("");
@@ -26,15 +27,16 @@ function Queue({socket}) {
   }, [socket, room, roomReady]); 
 
   return (
-    <div className="App">
+    <div className="joinFriendForm">
       {!showChat ? (
         <JoinQueueForm setUsername={setUsername} joinRoom={joinRoom}/>
       ) : (
         <>
         {!roomReady ?
          (<>  
-            <p>You are in queue please wait</p>
-          </>)
+          <p className="waiting-message">You are in queue please wait</p>    
+          <div className="block glow"></div>
+         </>)
           :
           <OnlineGame socket={socket} username={username} room={room} isOtherPlayerReady={isOtherPlayerReady} setIsOtherPlayerReady={setIsOtherPlayerReady}/> 
           }          

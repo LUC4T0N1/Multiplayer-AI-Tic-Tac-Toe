@@ -42,22 +42,44 @@
   text-align: center;
   align-items: center;
   justify-content: center;
-
   text-align: center;
   font-size: 80px;
 }
-
-.flex-container{
-  display: flex;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
+.block{
+  position: relative;
+  margin: 10% auto 0;
+  width: 50%;
+  height: 400px;
+  background: linear-gradient(0deg, black, rgb(48, 47, 47));
 }
 
-.chat-window{
-  margin-left: 50px;
-  margin-top: 100px;
+.glow::before , .glow::after{
+  content: '';
+  position: absolute;
+  left: -2px;
+  top: -2px;
+  background: linear-gradient(121.57deg, #00baaa 20%, #313a3a 80%);
+  background-size: 400%;
+  width: calc(100% + 5px);
+  height: calc(100% + 5px);
+  z-index: -1;
+  animation: animate 20s linear infinite;
+}
+@keyframes animate{
+  0%{
+    background-position: 0 0;
+  }
+
+  50%{
+    background-position: 400% 0;
+  }
+
+  100%{
+    background-position: 0 0;
+  }
 }
 
-.game{
+.glow::after{
+  filter: blur(40px);
 }
+

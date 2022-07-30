@@ -1,10 +1,11 @@
 .home{
-  display: grid;
-  justify-content: center;
-  align-items: center;  
+  display: flex;
+  align-items: center; 
+  flex-direction: column;
   width: 100vw;
   height: 100vh;
 }
+
 
 .modes{
   display: flex;
@@ -16,24 +17,78 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 100px;
 }
+
+.mode:hover{
+  box-shadow: 0 0 10px #007575, 0 0 20px #007575, 0 0 30px #007575;
+}
+
 
 .mode{
   border: none;
   padding: 35px;
-  background: linear-gradient(
-    to bottom right,
-    #007575,
-    rgb(3, 19, 19)
-    );
-  color: rgb(255, 255, 255);
+  background: linear-gradient(121.57deg, #00baaa 20%, #313a3a 80%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  box-shadow: 0 0 9px #007575, 0 0 9px #007575, 0 0 7px #007575;
   border-radius: 30px;
   font-weight: 500;
   font-size: 30px;
   cursor: pointer;
-  margin: 5px;
+  margin: 9px;
+  text-decoration: none;
+}
+
+.mode-selected{
+  border: none;
+  padding: 35px;
+  background: linear-gradient(121.57deg, #00baaa 20%, #313a3a 80%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  box-shadow: 0 0 10px #0cb8b8, 0 0 20px #149c9c, 0 0 30px #007575;
+  border-radius: 30px;
+  font-weight: 500;
+  font-size: 30px;
+  cursor: pointer;
+  margin: 9px;
+  text-decoration: none;
 }
 
 .home-title{
+  text-align: center;
   font-size: 80px;
+  margin-top: 250px;
+  background: linear-gradient(121.57deg, #00baaa 20%, #313a3a 80%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+@media screen and (max-width: 800px) {
+
+  .home-title{
+    font-size: 40px;
+    margin-top: 30px;
+  }
+
+  .specificModes{
+    flex-direction: column;
+    margin-top: 20px;
+  }
+
+  .mode{
+    padding: 15px;
+    font-weight: 200;
+    font-size: 15px;
+    margin: 7px;
+  }
+
+  .mode-selected{
+    padding: 15px;
+    font-weight: 200;
+    font-size: 15px;
+    margin: 6px;
+  }
+
+
 }

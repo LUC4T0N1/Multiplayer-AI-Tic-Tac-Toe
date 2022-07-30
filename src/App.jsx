@@ -8,19 +8,18 @@ import GameLocalMultiplayer from "./components/games/multiplayer/local/GameLocal
 import SinglePlayerGame from "./components/games/singleplayer/SinglePlayerGame";
 import Queue from "./components/games/multiplayer/online/room-creation/random/Queue";
 import { BrowserRouter as Router, Routes , Route } from "react-router-dom"
-import io from "socket.io-client";
 import { ThemeContext } from './infrastructure/context';
-function App() {
+function App({socket}) {
   const theme = useContext(ThemeContext);
   const darkMode = theme.state.darkMode;
 
-  const socket = io.connect(process.env.REACT_APP_SERVER_URL);
+
 
   return (
     <>
 
     <div className="App" style={{
-      backgroundColor: darkMode ? "#0A1416" : "#e1e8eb",
+      backgroundColor: darkMode ? "#121212" : "#FFFFFF",
       color: darkMode && "white",
 
     }}>

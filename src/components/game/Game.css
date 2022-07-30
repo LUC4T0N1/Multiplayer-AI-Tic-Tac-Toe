@@ -4,6 +4,19 @@
   justify-content: center;
 }
 
+.flex-container{
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-window{
+  margin-left: 50px;
+  margin-top: 100px;
+}
+
+
 .board {
   width: 650px;
   height: 650px;
@@ -11,7 +24,7 @@
   border: 1px solid black;
   display: flex;
   flex-direction: column;
-  margin-top: 15vh;
+  margin-top: 5vh;
 }
 
 .row {
@@ -47,9 +60,10 @@ h4 {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  width: 40%;
-  height: 100px;
-  font-size: 30px;
+  width: 100%;
+  font-size: 60px;
+  text-align: center;
+  margin-top: 35px;
 }
 
 .full-game{
@@ -72,4 +86,39 @@ h4 {
   font-weight: 500;
   font-size: 20px;
   cursor: pointer;
+}
+
+@media screen and (max-width: 800px) {
+
+  .board {
+    width: 250px;
+    height: 250px;
+  }
+
+  .square {
+    font-size: 37px;
+  }
+
+  .end-game{
+    font-size: 30px;
+    margin-top: 50px;
+  }
+
+  .restart-button{
+    border: none;
+    padding: 10px;
+    font-size: 18px;
+    margin-top: -19px;
+    margin-bottom: 19px;
+  }
+
+}
+
+@media screen and (max-width: 1015px) {
+  .flex-container{
+    flex-direction: column;
+  }
+  .chat-window{
+    margin: 0;
+  }
 }

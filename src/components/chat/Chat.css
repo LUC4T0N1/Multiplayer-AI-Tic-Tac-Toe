@@ -107,7 +107,7 @@
 }
 
 .chat-window .chat-footer input {
-  height: 100%;
+  height: 77%;
   flex: 85%;
   border: 0;
   padding: 0 0.7em;
@@ -140,4 +140,31 @@
 
 .message-meta p{
   color: #163f3d;
+}
+
+@media screen and (max-width: 1015px) {
+  .chat-window {
+    width: 220px;
+    height: 250px;
+  }
+  
+  .chat-window .chat-body {
+    height: calc(350px - (45px + 70px));
+  }
+
+  .chat-window .chat-footer input {
+    width: 80%;
+  }
+  #other .message-meta {
+    margin-left: 3px;
+  }
+  #you .message-meta {
+    margin-right: 3px;
+  }
+  .message-meta #author {
+    margin-left: 8px;
+  }
+  .chat-window .chat-body .message .message-meta {
+    font-size: 6px;
+  }
 }
