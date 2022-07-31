@@ -34,7 +34,7 @@ function RoomSelection({socket}) {
         <>
           {!roomReady ?
          (<>  
-            <p className="waiting-message">Waiting for the other person to join the room</p>
+            <div className="border"></div>
           </>)
           :
           <OnlineGame socket={socket} username={username} room={room} isOtherPlayerReady={isOtherPlayerReady} setIsOtherPlayerReady={setIsOtherPlayerReady}/> 

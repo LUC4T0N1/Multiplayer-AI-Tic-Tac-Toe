@@ -34,8 +34,7 @@ function Queue({socket}) {
         <>
         {!roomReady ?
          (<>  
-          <p className="waiting-message">You are in queue please wait</p>    
-          <div className="block glow"></div>
+          <div className="border"></div>
          </>)
           :
           <OnlineGame socket={socket} username={username} room={room} isOtherPlayerReady={isOtherPlayerReady} setIsOtherPlayerReady={setIsOtherPlayerReady}/> 

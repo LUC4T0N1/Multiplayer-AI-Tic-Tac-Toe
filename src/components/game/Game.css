@@ -13,7 +13,7 @@
 
 .chat-window{
   margin-left: 50px;
-  margin-top: 100px;
+  margin-top: 220px;
 }
 
 
@@ -21,10 +21,10 @@
   width: 650px;
   height: 650px;
   background-color: rgb(252, 252, 252);
-  border: 1px solid black;
   display: flex;
   flex-direction: column;
-  margin-top: 5vh;
+  margin-top: 160px;
+  z-index: 10;
 }
 
 .row {
@@ -33,16 +33,30 @@
   flex-direction: row;
 }
 
-.square {
+.square-o {
   flex: 33%;
   height: 100%;
-  border: 1px solid black;
   cursor: pointer;
   display: grid;
   place-items: center;
-  font-size: 60px;
-  color: black;
+  font-size: 80px;
+  color: #00baaa;
   font-family: Arial, Helvetica, sans-serif;
+  background: #1d2422;
+  box-shadow: 0 0 5px #0cb8b8, 0 0 5px #3aff8c, 0 0 6px #007575;
+}
+
+.square-x {
+  flex: 33%;
+  height: 100%;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 80px;
+  color: #5eb381;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #1d2422;
+  box-shadow: 0 0 5px #0cb8b8, 0 0 5px #3aff8c, 0 0 6px #007575;
 }
 
 .square:active {
@@ -64,6 +78,8 @@ h4 {
   font-size: 60px;
   text-align: center;
   margin-top: 35px;
+  z-index: 10;
+  margin-bottom: -117px;
 }
 
 .full-game{
@@ -76,40 +92,48 @@ h4 {
 .restart-button{
   border: none;
   padding: 20px;
-  background: linear-gradient(
-    to bottom right,
-    #007575,
-    rgb(3, 19, 19)
-    );
+  background: linear-gradient(121.57deg, #5eb381, #00baaa );
   color: rgb(255, 255, 255);
   border-radius: 30px;
   font-weight: 500;
   font-size: 20px;
   cursor: pointer;
+  font-size: 20px;
 }
 
 @media screen and (max-width: 800px) {
 
   .board {
-    width: 250px;
-    height: 250px;
+    width: 220px;
+    height: 220px;
+    margin-top: 80px;
   }
 
-  .square {
+  .chat-window{
+    margin-left: 0;
+    margin-top: 60px;
+  }
+
+  .square-o {
+    font-size: 37px;
+  }
+
+  .square-x {
     font-size: 37px;
   }
 
   .end-game{
-    font-size: 30px;
-    margin-top: 50px;
+    font-size: 20px;
+    margin-top: 40px;
+    margin-bottom: -67px;
   }
 
   .restart-button{
     border: none;
-    padding: 10px;
-    font-size: 18px;
-    margin-top: -19px;
-    margin-bottom: 19px;
+    padding: 6px;
+    font-size: 13px;
+    margin-top: -25px;
+    margin-bottom: 21px;
   }
 
 }
@@ -117,8 +141,5 @@ h4 {
 @media screen and (max-width: 1015px) {
   .flex-container{
     flex-direction: column;
-  }
-  .chat-window{
-    margin: 0;
   }
 }

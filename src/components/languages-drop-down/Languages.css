@@ -42,7 +42,7 @@
 }
 
 .dropdown-item:hover{
-  background-color: rgb(175, 53, 83);
+  background: linear-gradient(121.57deg, #6ac991, #00e4d1 );
 }
 
 @media screen and (max-width: 800px) {

@@ -12,9 +12,10 @@ export const checkIfTie = ({board, handleGameOver}) => {
 };
 
 export const checkWin = ({board, handleGameOver}) => {
+  let fim = false
   Patterns.forEach((currPattern) => {
     const firstPlayer = board[currPattern[0]];
-    if (firstPlayer === "") return;
+    if (firstPlayer === "") return fim;
     let foundWinningPattern = true;
     currPattern.forEach((idx) => {
       if (board[idx] !== firstPlayer) {
@@ -24,8 +25,11 @@ export const checkWin = ({board, handleGameOver}) => {
 
     if (foundWinningPattern) {
       handleGameOver({ winner: board[currPattern[0]], state: "won"});
+      console.log("era pra deixar true llllkkkkkk")
+      fim = true;
     }
   });
+  return fim;
 };
 
 export const Patterns = [

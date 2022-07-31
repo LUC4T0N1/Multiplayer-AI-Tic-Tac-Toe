@@ -3,7 +3,7 @@ import "./Game.css";
 
 function Square({ chooseSquare, val }) {
   return (
-    <div className="square" onClick={chooseSquare}>
+    <div className={val==='X'?"square-x" : "square-o" } onClick={chooseSquare}>
       {val}
     </div>
   );

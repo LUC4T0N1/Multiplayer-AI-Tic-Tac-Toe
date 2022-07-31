@@ -28,9 +28,10 @@
   border-radius: 5px;
   padding: 5px;
   font-size: 16px;
-  background: #0b6e69;
-  color: #fff;
+  background: linear-gradient(121.57deg, #5eb381, #00baaa );
+  color: rgb(255, 255, 255);
   cursor: pointer;
+  font-size: 20px;
 }
 
 .join-button:hover {
@@ -45,41 +46,131 @@
   text-align: center;
   font-size: 80px;
 }
-.block{
+
+/* .loader{
   position: relative;
-  margin: 10% auto 0;
-  width: 50%;
-  height: 400px;
-  background: linear-gradient(0deg, black, rgb(48, 47, 47));
+  width: 300px;
+  height: 10px;
+  background: #fff;
+  -web-kit-reflect: below 1px linear-gradient(transparent, #0005);
 }
 
-.glow::before , .glow::after{
+.loader::before{
   content: '';
   position: absolute;
-  left: -2px;
-  top: -2px;
+  inset: 0;
   background: linear-gradient(121.57deg, #00baaa 20%, #313a3a 80%);
-  background-size: 400%;
-  width: calc(100% + 5px);
-  height: calc(100% + 5px);
-  z-index: -1;
   animation: animate 20s linear infinite;
+  background-size: 500%;
 }
-@keyframes animate{
+
+.loader::after{
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #05d3c2 , #2ce068 );
+  animation: animate 20s linear infinite;
+  background-size: 500%;
+  filter: blur(20px);
+} */
+
+/* @keyframes animate{
   0%{
     background-position: 0 0;
   }
 
-  50%{
-    background-position: 400% 0;
+  0%{
+    background-position: 500% 0;
   }
+} */
 
+
+.border {
+  width: 150vh;
+  height: 80vh;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 100px;
+}
+.border::before{
+  content: "";
+  background: linear-gradient(90deg, #00ffea , #2ce068  );
+  width: 150%;
+  height: 90%;
+  position: absolute;
+  animation: rotate 2s linear infinite;
+  filter: blur(50px);
+}
+.border::after{
+  content: "You are in the queue please wait";
+  width: 95%;
+  height: 95%;
+  position: absolute;
+  background: black;
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 40px;
+  color: #4ba394  ;
+  letter-spacing: 5px;
+  box-shadow: inset 20px 20px 20px #0000008c;
+}
+@keyframes rotate {
+  0%{
+      transform: rotate(0deg);
+  }
   100%{
-    background-position: 0 0;
+      transform: rotate(-360deg);
   }
 }
 
-.glow::after{
-  filter: blur(40px);
+@media screen and (max-width: 1456px) {
+  .border {
+    width: 120vh;
+    height: 70vh;
+  }
 }
 
+@media screen and (max-width: 1200px) {
+  .border {
+    width: 100vh;
+    height: 60vh;
+  }
+}
+
+@media screen and (max-width: 1050px) {
+  .border {
+    width: 70vh;
+    height: 50vh;
+  }
+}
+
+@media screen and (max-width: 750px) {
+  .border {
+    width: 50vh;
+    height: 40vh;
+  }
+}
+
+@media screen and (max-width: 550px) {
+  .border {
+    width: 35vh;
+    height: 35vh;
+  }
+}
+
+@media screen and (max-width: 350px) {
+  .border {
+    width: 30vh;
+    height: 20vh;
+  }
+}
+
+.border::after{
+  font-size: 20px;
+}

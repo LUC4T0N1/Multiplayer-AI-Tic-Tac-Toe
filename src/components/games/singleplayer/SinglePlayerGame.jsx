@@ -1,8 +1,8 @@
-import React, {useEffect ,useState} from "react";
+import {useEffect ,useState} from "react";
 import {checkIfTie, checkWin} from  "../../../utils/EndGame";
-import Board from "../../game/Board";
 import {findBestMove, findWorstMove, findRandomMove} from  "../../../utils/AILogic";
 import "../../game/Game.css"
+import Game from "../../game/Game";
 
 function SinglePlayerGame({ai_type}) {
   const [board, setBoard] = useState(["","","","","","","","",""])
@@ -13,14 +13,16 @@ function SinglePlayerGame({ai_type}) {
   const handleGameOver = ({winner, state}) => {
     console.log("acabou o jogo! " + state)
     setResult({ winner: winner, state: state });
+    setTurn("X");
   }
 
-  useEffect(() => {
-    if(turn === "O"){
+  useEffect(() =>  {
+    let win = false
+    checkIfTie({board, handleGameOver});
+    win = checkWin({board, handleGameOver});
+    if(turn === "O" && win !== true){
       handleAITurn();
     }
-    checkIfTie({board, handleGameOver});
-    checkWin({board, handleGameOver});
 }, [board]); 
 
 const handleRestart = () => {
@@ -30,7 +32,8 @@ const handleRestart = () => {
 }
 
 const handleAITurn = () => {
-  if(turn === "O"){
+  console.log("winner: " + result.winner)
+  if(turn === "O" && result.state === "none"){
     let square = null;
       if(ai_type === 1) {
         square = findBestMove({board, player});
@@ -75,16 +78,7 @@ const handleAITurn = () => {
   };
  
   return (
-    <div className="full-game">
-      <div className="end-game">
-      {result.state === "won" && <div> {result.winner} Won The Game!</div>}
-      {result.state === "tie" && <div> Game Tieds!</div>}
-      </div>
-      <Board chooseSquare={chooseSquare} board={board}/>
-      <div className="end-game">
-        {result.state !== "none" ? <button className="restart-button" onClick={handleRestart}> RESTART GAME </button> : ""}
-      </div>
-    </div>
+   <Game result={result} chooseSquare={chooseSquare} handleRestart={handleRestart} board={board}/>
   )
 }
 

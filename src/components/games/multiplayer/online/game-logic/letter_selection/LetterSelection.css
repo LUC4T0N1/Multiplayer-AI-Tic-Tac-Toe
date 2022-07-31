@@ -14,8 +14,8 @@
 .option{
   border-style: solid;
   border-color: black;
-  background-color: rgb(33, 190, 156);
-  color: aliceblue;
+  background:  linear-gradient(121.57deg, #6ac991, #00e4d1 );
+  color: rgb(0, 0, 0);
   padding: 30px;
   font-size: 60px;
   cursor: pointer;
@@ -24,7 +24,7 @@
 .option-selected{
   border-style: solid;
   border-color: black;
-  background-color: rgb(12, 88, 76);
+  background: linear-gradient(121.57deg, #3b644c, #0d6d65 );
   color: aliceblue;
   padding: 30px;
   font-size: 60px;

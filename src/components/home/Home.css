@@ -28,10 +28,10 @@
 .mode{
   border: none;
   padding: 35px;
-  background: linear-gradient(121.57deg, #00baaa 20%, #313a3a 80%);
+  background: linear-gradient(121.57deg, #5eb381, #00baaa );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  box-shadow: 0 0 9px #007575, 0 0 9px #007575, 0 0 7px #007575;
+  box-shadow:0 0 9px #80FF72, 0 0 9px #7EE8FA, 0 0 7px #7EE8FA;
   border-radius: 30px;
   font-weight: 500;
   font-size: 30px;
@@ -43,7 +43,7 @@
 .mode-selected{
   border: none;
   padding: 35px;
-  background: linear-gradient(121.57deg, #00baaa 20%, #313a3a 80%);
+  background: linear-gradient(121.57deg, #5eb381, #00baaa );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   box-shadow: 0 0 10px #0cb8b8, 0 0 20px #149c9c, 0 0 30px #007575;
@@ -59,7 +59,7 @@
   text-align: center;
   font-size: 80px;
   margin-top: 250px;
-  background: linear-gradient(121.57deg, #00baaa 20%, #313a3a 80%);
+  background: linear-gradient(121.57deg, #00baaa , #5eb381 );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

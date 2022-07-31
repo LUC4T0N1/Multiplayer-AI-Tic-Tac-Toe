@@ -2,6 +2,7 @@ import React, {useEffect ,useState} from "react";
 import Square from "../../../game/Square";
 import {checkIfTie, checkWin} from  "../../../../utils/EndGame";
 import Board from "../../../game/Board";
+import Game from "../../../game/Game";
 
 const GameLocalMultiplayer = () => {
   const [board, setBoard] = useState(["","","","","","","","",""])
@@ -41,16 +42,7 @@ const handleRestart = () => {
   };
 
   return (
-    <div className="full-game">
-      <div className="end-game">
-      {result.state === "won" && <div> {result.winner} Won The Game!</div>}
-      {result.state === "tie" && <div> Game Tieds!</div>}
-      </div>
-      <Board chooseSquare={chooseSquare} board={board}/>
-      <div className="end-game">
-        {result.state !== "none" ? <button className="restart-button" onClick={handleRestart}> RESTART GAME </button> : ""}
-      </div>
-    </div>
+    <Game result={result} chooseSquare={chooseSquare} handleRestart={handleRestart} board={board}/>
   )
 }
 

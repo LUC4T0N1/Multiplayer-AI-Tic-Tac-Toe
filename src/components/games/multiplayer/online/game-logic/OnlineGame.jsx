@@ -4,6 +4,7 @@ import Chat from "../../../../chat/Chat";
 import {checkIfTie, checkWin} from  "../../../../../utils/EndGame";
 import Board from "../../../../game/Board";
 import "../../../../game/Game.css"
+import Game from "../../../../game/Game";
 
 const OnlineGame = ({ socket, username, room, isOtherPlayerReady, setIsOtherPlayerReady }) => {
 
@@ -126,18 +127,8 @@ const OnlineGame = ({ socket, username, room, isOtherPlayerReady, setIsOtherPlay
   return (
     <div className="flex-container">
       {(!oIsSelected.selected || !xIsSelected.selected) ? <LetterSelection handleXSelection={handleXSelection} xIsSelected={xIsSelected} handleOSelection={handleOSelection} oIsSelected={oIsSelected}/> : 
-      <>
-      <div className="full-game">
-      <div className="end-game">
-      {result.state === "won" && <div> {result.winner} Won The Game!</div>}
-      {result.state === "tie" && <div> Game Tieds!</div>}
-      </div>
-      <Board chooseSquare={chooseSquare} board={board}/>
-      <div className="end-game">
-        {result.state !== "none" ? <button className="restart-button" onClick={handleRestart}> RESTART GAME </button> : ""}
-      </div>
-    </div>
-      </> }    
+         <Game result={result} chooseSquare={chooseSquare} handleRestart={handleRestart} board={board}/>
+      }    
 
 
       <Chat socket={socket} username={username} room={room} />
