@@ -19,7 +19,7 @@ function App({socket}) {
     <>
 
     <div className="App" style={{
-      backgroundColor: darkMode ? "#121212" : "#FFFFFF",
+      backgroundColor: darkMode ? "#121212" : "rgb(228, 240, 238)",
       color: darkMode && "white",
 
     }}>

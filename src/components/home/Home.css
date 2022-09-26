@@ -26,6 +26,7 @@
 
 
 .mode{
+  font-family: 'Black Ops One', cursive;
   border: none;
   padding: 35px;
   background: linear-gradient(121.57deg, #5eb381, #00baaa );
@@ -33,7 +34,7 @@
   -webkit-text-fill-color: transparent;
   box-shadow:0 0 9px #80FF72, 0 0 9px #7EE8FA, 0 0 7px #7EE8FA;
   border-radius: 30px;
-  font-weight: 500;
+  font-weight: 700;
   font-size: 30px;
   cursor: pointer;
   margin: 9px;
@@ -41,6 +42,7 @@
 }
 
 .mode-selected{
+  font-family: 'Black Ops One', cursive;
   border: none;
   padding: 35px;
   background: linear-gradient(121.57deg, #5eb381, #00baaa );
@@ -48,7 +50,7 @@
   -webkit-text-fill-color: transparent;
   box-shadow: 0 0 10px #0cb8b8, 0 0 20px #149c9c, 0 0 30px #007575;
   border-radius: 30px;
-  font-weight: 500;
+  font-weight: 700;
   font-size: 30px;
   cursor: pointer;
   margin: 9px;
@@ -57,8 +59,9 @@
 
 .home-title{
   text-align: center;
-  font-size: 80px;
-  margin-top: 250px;
+  font-size: 90px;
+  margin-top: 200px;
+  font-weight: 700;
   background: linear-gradient(121.57deg, #00baaa , #5eb381 );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

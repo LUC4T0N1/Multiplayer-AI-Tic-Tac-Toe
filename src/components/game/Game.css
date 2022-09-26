@@ -40,10 +40,11 @@
   display: grid;
   place-items: center;
   font-size: 80px;
-  color: #00baaa;
+  color: #eeeeee;
   font-family: Arial, Helvetica, sans-serif;
-  background: #1d2422;
-  box-shadow: 0 0 5px #0cb8b8, 0 0 5px #3aff8c, 0 0 6px #007575;
+  background: linear-gradient(to left, rgb(21, 51, 46), rgb(112, 189, 176));
+  box-shadow: 0 0 7px #f7f7f7, 0 0 7px #ffffff, 0 0 7px #ffffff;
+  text-shadow: 0 0 10px rgb(252, 252, 252), 0 0 20px rgb(121, 118, 118), 0 0 30px #000000, 0 0 40px #000000;
 }
 
 .square-x {
@@ -53,11 +54,13 @@
   display: grid;
   place-items: center;
   font-size: 80px;
-  color: #5eb381;
+  color: #ffffff;
   font-family: Arial, Helvetica, sans-serif;
-  background: #1d2422;
-  box-shadow: 0 0 5px #0cb8b8, 0 0 5px #3aff8c, 0 0 6px #007575;
+  background: linear-gradient(to left, rgb(21, 51, 46), rgb(112, 189, 176));
+  box-shadow: 0 0 7px #000000, 0 0 7px #080000, 0 0 7px #000000;
+  text-shadow: 0 0 10px rgb(252, 252, 252), 0 0 20px rgb(121, 118, 118), 0 0 30px #000000, 0 0 40px #000000;
 }
+
 
 .square:active {
   background-color: lightgray;

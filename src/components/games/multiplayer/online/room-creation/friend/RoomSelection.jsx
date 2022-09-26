@@ -10,13 +10,27 @@ function RoomSelection({socket}) {
   const [showChat, setShowChat] = useState(false);
   const [isOtherPlayerReady, setIsOtherPlayerReady] = useState(false);
   const [roomReady, setRoomReady] =  useState(false);
+  const [rightRoomName, setRightRoomName] = useState(true);
+  const [rightUserName, setRightUserName] = useState(true);
 
   const joinRoom = async () => {
-    if (username !== "" && room !== "") {
-      await socket.emit("join_room", room);
-      setShowChat(true);
+    if(username === ""){
+      setRightUserName(false)
+    }else{
+      setRightUserName(true)
+      if(!containsAnyLetter(room)){
+        setRightRoomName(false)
+      }else{
+        setRightRoomName(true)
+        await socket.emit("join_room", room);
+        setShowChat(true);
+      }
     }
   };
+
+  function containsAnyLetter(str) {
+    return /[a-zA-Z]/.test(str);
+  }
 
   useEffect(() => {
     socket.on("room-ready", async (data) => {
@@ -29,7 +43,11 @@ function RoomSelection({socket}) {
   return (
     <div className="joinFriendForm">
       {!showChat ? (
-        <JoinForm setUsername={setUsername} setRoom={setRoom} joinRoom={joinRoom}/>
+        <>
+          <JoinForm setUsername={setUsername} setRoom={setRoom} joinRoom={joinRoom}/>
+          {rightRoomName ? <></> : <div>O nome da sala precisa de pelo menos uma letra</div> }
+          {rightUserName ? <></> : <div>O NickName não pode ser vazio</div> }
+        </>
       ) : (
         <>
           {!roomReady ?

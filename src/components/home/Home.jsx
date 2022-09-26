@@ -1,8 +1,11 @@
 import React, {useState} from 'react'
 import { Link } from "react-router-dom";
 import "./Home.css";
+import { ThemeContext } from "../../infrastructure/context";
+import { useContext } from "react";
 
 function Home() {
+  const theme =  useContext(ThemeContext);
   const [mode, setMode] = useState("")
   console.log("mode: " + mode)
   const handleModeSelection = (modeSelected) =>{
@@ -31,9 +34,9 @@ function Home() {
         {mode === "Multiplayer" ? 
         <>
         <div className='specificModes'>
-            <Link className='mode' to="/multiplayer/local">Local</Link>
+            <Link className='mode' to="/multiplayer/local">Local Game</Link>
             <Link className='mode' to="/multiplayer/friendly">Play with a Friend</Link>
-            <Link className='mode' to="/multiplayer/random">Play with a Random Person</Link>
+            <Link className='mode' to="/multiplayer/random">Random Opponent</Link>
         </div>
         </> : ""}
         {mode === "Singleplayer" ? 

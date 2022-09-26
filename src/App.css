@@ -3,11 +3,13 @@
 .App {
   width: 100vw;
   height: 100vh;
-  font-family: "Open Sans", sans-serif;
 }
 body {
   margin: 0%;
   padding: 0%;
+}
+html{
+  font-family: 'Black Ops One', cursive;
 }
 
 /* @media screen and (max-width: 1015px) {

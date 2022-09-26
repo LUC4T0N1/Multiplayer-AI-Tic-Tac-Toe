@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import OnlineGame from "../../game-logic/OnlineGame";
 import JoinQueueForm from "./join-queue-form/JoinQueueForm";
 import "../RoomCreation.css"
+/* import { Prompt } from 'react-router' */
 
 function Queue({socket}) {
   const [username, setUsername] = useState("");
@@ -17,7 +18,19 @@ function Queue({socket}) {
     }
   };
 
+  const componentDidUpdate = () => {
+    if (!roomReady) {
+      window.onbeforeunload = () => true
+    } else {
+      window.onbeforeunload = undefined
+    }
+  }
+
   useEffect(() => {
+    socket.on("check_online", (data) => {
+      console.log("verificando se eu estou ok")
+      socket.emit("ok", username);
+    });
     socket.on("game_start", (data) => {
       console.log("jogo começando na sala " + data)
       setIsOtherPlayerReady(true);
@@ -34,6 +47,10 @@ function Queue({socket}) {
         <>
         {!roomReady ?
          (<>  
+{/*          <Prompt
+          when={!roomReady}
+          message='You have unsaved changes, are you sure you want to leave?'
+    /> */}
           <div className="border"></div>
          </>)
           :
