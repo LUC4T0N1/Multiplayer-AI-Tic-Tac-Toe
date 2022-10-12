@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from "react";
 import ScrollToBottom from "react-scroll-to-bottom";
 import "./Chat.css";
+import {useTranslation} from 'react-i18next';
+import { t } from "i18next";
 
 function Chat({ socket, username, room }) {
   const [currentMessage, setCurrentMessage] = useState("");
   const [messageList, setMessageList] = useState([]);
+  const {t} = useTranslation()
 
   const sendMessage = async () => {
     if (currentMessage !== "") {
@@ -26,7 +29,6 @@ function Chat({ socket, username, room }) {
 
   useEffect(() => {
     socket.on("receive_message", (data) => {
-      console.log("MENSAGEM RECEBIDA! " + JSON.stringify(data))
       setMessageList((list) => [...list, data]);
     });
   }, [socket]);
@@ -61,7 +63,7 @@ function Chat({ socket, username, room }) {
         <input
           type="text"
           value={currentMessage}
-          placeholder="Hey..."
+          placeholder={t('hey')}
           onChange={(event) => {
             setCurrentMessage(event.target.value);
           }}

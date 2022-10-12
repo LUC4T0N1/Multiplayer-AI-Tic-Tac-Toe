@@ -78,7 +78,6 @@ const OnlineGame = ({ socket, username, room, isOtherPlayerReady, setIsOtherPlay
           }
         }else{
           if(xIsSelected.player !== username) {
-            console.log(username + " Selecionou o O");
             await socket.emit("select_letter", {letter: 'O', selected: true, player: username, room: room});
             setOIsSelected({selected: true, player: username});
             setPlayer('O');
@@ -90,16 +89,13 @@ const OnlineGame = ({ socket, username, room, isOtherPlayerReady, setIsOtherPlay
     useEffect(() => {
       socket.on("player-ready", (data) => {
         if(data.author !== username){
-          console.log("o outro jogador entrou na sala de seleção de letra");
           setIsOtherPlayerReady(true);
         }
       });
       socket.on("letter_selected", (data) => {
         if(data.letter === 'X'){
-          console.log("o outro selecionou/deselecionou X..");
           setXIsSelected({selected: data.selected, player: data.player});
         }else{
-          console.log("o outro selecionou/deselecionou O..");
           setOIsSelected({selected: data.selected, player: data.player});
         }
       });
@@ -131,7 +127,7 @@ const OnlineGame = ({ socket, username, room, isOtherPlayerReady, setIsOtherPlay
       }    
 
 
-      <Chat socket={socket} username={username} room={room} />
+      <Chat socket={socket} username={username} room={room}/>
     </div>
   );
 };

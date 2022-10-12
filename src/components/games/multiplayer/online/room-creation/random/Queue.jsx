@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import OnlineGame from "../../game-logic/OnlineGame";
 import JoinQueueForm from "./join-queue-form/JoinQueueForm";
 import "../RoomCreation.css"
-/* import { Prompt } from 'react-router' */
+import {useTranslation} from 'react-i18next';
 
 function Queue({socket}) {
+  const {t} = useTranslation()
   const [username, setUsername] = useState("");
   const [room, setRoom] = useState("");
   const [showChat, setShowChat] = useState(false);
@@ -18,21 +19,11 @@ function Queue({socket}) {
     }
   };
 
-  const componentDidUpdate = () => {
-    if (!roomReady) {
-      window.onbeforeunload = () => true
-    } else {
-      window.onbeforeunload = undefined
-    }
-  }
-
   useEffect(() => {
     socket.on("check_online", (data) => {
-      console.log("verificando se eu estou ok")
       socket.emit("ok", username);
     });
     socket.on("game_start", (data) => {
-      console.log("jogo começando na sala " + data)
       setIsOtherPlayerReady(true);
       setRoomReady(true);
       setRoom(data)
@@ -47,11 +38,7 @@ function Queue({socket}) {
         <>
         {!roomReady ?
          (<>  
-{/*          <Prompt
-          when={!roomReady}
-          message='You have unsaved changes, are you sure you want to leave?'
-    /> */}
-          <div className="border"></div>
+          <div className="border" data-after-content={t('waiting-random')}></div>
          </>)
           :
           <OnlineGame socket={socket} username={username} room={room} isOtherPlayerReady={isOtherPlayerReady} setIsOtherPlayerReady={setIsOtherPlayerReady}/> 

@@ -10,7 +10,6 @@ const GameLocalMultiplayer = () => {
   const [result, setResult] = useState({ winner: "none", state: "none" });
 
   const handleGameOver = ({winner, state}) => {
-    console.log("acabou o jogo! " + state)
     setResult({ winner: winner, state: state });
   }
 

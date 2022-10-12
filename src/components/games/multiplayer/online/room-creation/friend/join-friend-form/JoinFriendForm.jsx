@@ -1,25 +1,27 @@
 import React from 'react'
 import "../../RoomCreation.css"
+import {useTranslation} from 'react-i18next';
 
 function JoinForm({setUsername, setRoom, joinRoom}) {
+  const {t} = useTranslation()
   return (
     <div className="joinFriendForm">
-      <h3>Enter a NickName and the room ID</h3>
+      <h3>{t('room-title')}</h3>
       <input
         type="text"
-        placeholder="Nickname..."
+        placeholder={t('nickname')}
         onChange={(event) => {
           setUsername(event.target.value);
         }}
       />
       <input
         type="text"
-        placeholder="Room ID..."
+        placeholder={t('room-id')}
         onChange={(event) => {
           setRoom(event.target.value);
         }}
       />
-      <button className='join-button' onClick={joinRoom}>Join A Room</button>
+      <button className='join-button' onClick={joinRoom}>{t('join-room')}</button>
   </div>
   )
 }

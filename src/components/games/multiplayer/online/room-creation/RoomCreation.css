@@ -98,7 +98,7 @@
 }
 .border::before{
   content: "";
-  background: linear-gradient(90deg, #00ffea , #2ce068  );
+  background: linear-gradient(90deg, #00ffea , #42eca6  );
   width: 150%;
   height: 90%;
   position: absolute;
@@ -106,7 +106,7 @@
   filter: blur(50px);
 }
 .border::after{
-  content: "You are in the queue please wait";
+  content: attr(data-after-content);
   width: 95%;
   height: 95%;
   position: absolute;

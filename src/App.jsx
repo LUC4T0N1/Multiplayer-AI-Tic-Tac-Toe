@@ -19,7 +19,7 @@ function App({socket}) {
     <>
 
     <div className="App" style={{
-      backgroundColor: darkMode ? "#121212" : "rgb(228, 240, 238)",
+      backgroundColor: darkMode ? "#081012" : "#f0f3f5",
       color: darkMode && "white",
 
     }}>
@@ -27,9 +27,9 @@ function App({socket}) {
        <Router>
        <NavBar/>
             <Routes>
-              <Route path="/" element={<Home/>}/>
-              <Route path="/singleplayer/never-win" element={<SinglePlayerGame ai_type={1}/>}/>
-              <Route path="/singleplayer/always-win" element={<SinglePlayerGame ai_type={2}/>}/>
+              <Route path="/" element={<Home socket={socket}/>}/>
+              <Route path="/singleplayer/easy" element={<SinglePlayerGame ai_type={1}/>}/>
+              <Route path="/singleplayer/hard" element={<SinglePlayerGame ai_type={2}/>}/>
               <Route path="/singleplayer/random-ia" element={<SinglePlayerGame ai_type={3}/>}/>
               <Route path="/multiplayer/local" element={<GameLocalMultiplayer/>}/>
               <Route path="/multiplayer/friendly" element={<RoomSelection socket={socket}/>}/>

@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import OnlineGame from "../../game-logic/OnlineGame";
 import JoinForm from "./join-friend-form/JoinFriendForm";
 import "../RoomCreation.css"
+import {useTranslation} from 'react-i18next';
 
 
 function RoomSelection({socket}) {
+  const {t} = useTranslation()
   const [username, setUsername] = useState("");
   const [room, setRoom] = useState("");
   const [showChat, setShowChat] = useState(false);
@@ -34,7 +36,6 @@ function RoomSelection({socket}) {
 
   useEffect(() => {
     socket.on("room-ready", async (data) => {
-        console.log("jogo começando na sala " + data)
         setIsOtherPlayerReady(true);
         setRoomReady(true);
     });
@@ -45,14 +46,14 @@ function RoomSelection({socket}) {
       {!showChat ? (
         <>
           <JoinForm setUsername={setUsername} setRoom={setRoom} joinRoom={joinRoom}/>
-          {rightRoomName ? <></> : <div>O nome da sala precisa de pelo menos uma letra</div> }
-          {rightUserName ? <></> : <div>O NickName não pode ser vazio</div> }
+          {rightRoomName ? <></> : <div>{t('id-warning')}</div> }
+          {rightUserName ? <></> : <div>{t('name-warning')}</div> }
         </>
       ) : (
         <>
           {!roomReady ?
          (<>  
-            <div className="border"></div>
+            <div className="border" data-after-content={t('waiting-friend')}></div>
           </>)
           :
           <OnlineGame socket={socket} username={username} room={room} isOtherPlayerReady={isOtherPlayerReady} setIsOtherPlayerReady={setIsOtherPlayerReady}/> 

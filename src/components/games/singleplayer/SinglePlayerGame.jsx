@@ -11,7 +11,6 @@ function SinglePlayerGame({ai_type}) {
   const [result, setResult] = useState({ winner: "none", state: "none" });
 
   const handleGameOver = ({winner, state}) => {
-    console.log("acabou o jogo! " + state)
     setResult({ winner: winner, state: state });
     setTurn("X");
   }
@@ -32,7 +31,6 @@ const handleRestart = () => {
 }
 
 const handleAITurn = () => {
-  console.log("winner: " + result.winner)
   if(turn === "O" && result.state === "none"){
     let square = null;
       if(ai_type === 1) {
@@ -42,7 +40,6 @@ const handleAITurn = () => {
       }else{
         square = findRandomMove({board});
       }
-      console.log("MAQUINA JOGOU " + square )
       const currentPlayer = player === "O" ? "X" : "O";
       setPlayer(currentPlayer); 
       setBoard(
@@ -59,9 +56,7 @@ const handleAITurn = () => {
 
 
   const chooseSquare = (square) => {
-    console.log("vez do " + turn)
     if(turn === "X" && result.state === "none"){
-      console.log("JOGADOR JOGOU " + square )
       const currentPlayer = player === "X" ? "O" : "X";
       setPlayer(currentPlayer);
       setBoard(

@@ -75,7 +75,6 @@ function minimax(board, depth, isMax, player) {
 }
  
 export function findBestMove({board, player}) {
-  console.log("achando melhor movimento...")
     let bestVal = -1000;
     let bestMove = -1;
     board.map((val, idx) => {
@@ -93,7 +92,6 @@ export function findBestMove({board, player}) {
 }
 
 export function findWorstMove({board, player}) {
-  console.log("achando pior movimento...")
     let bestVal = 1000;
     let bestMove = 1;
     board.map((val, idx) => {

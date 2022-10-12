@@ -25,7 +25,6 @@ export const checkWin = ({board, handleGameOver}) => {
 
     if (foundWinningPattern) {
       handleGameOver({ winner: board[currPattern[0]], state: "won"});
-      console.log("era pra deixar true llllkkkkkk")
       fim = true;
     }
   });
