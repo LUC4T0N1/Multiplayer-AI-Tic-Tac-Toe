@@ -33,8 +33,8 @@ function Home({socket}) {
 
   return (
     <div className='home'>
-      <p className='home-title'>JOGO DA VELHA</p>
-      <p className='home-title'>{t('mode')}</p>
+      <p className='home-title'>{t('tictactoe')}</p>
+      <p className='home-subtitle'>{t('mode')}</p>
       <div className='modes'>
         <button className={mode==='Multiplayer'?'mode-selected':'mode'} onClick={() => handleModeSelection("Multiplayer")}>{t('multiplayer')}</button>
         <button className={mode==='Singleplayer'?'mode-selected':'mode'} onClick={() => handleModeSelection("Singleplayer")}>{t('singleplayer')}</button>

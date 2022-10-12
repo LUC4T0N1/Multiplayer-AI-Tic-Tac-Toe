@@ -59,8 +59,18 @@
 
 .home-title{
   text-align: center;
+  font-size: 95px;
+  margin-top: 120px;
+  font-weight: 700;
+  background: linear-gradient(121.57deg, #00baaa , #5eb381 );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.home-subtitle{
+  text-align: center;
   font-size: 90px;
-  margin-top: 200px;
+  margin-top: 1px;
   font-weight: 700;
   background: linear-gradient(121.57deg, #00baaa , #5eb381 );
   -webkit-background-clip: text;
@@ -69,9 +79,13 @@
 
 @media screen and (max-width: 800px) {
 
-  .home-title{
+  .home-subtitle{
     font-size: 40px;
-    margin-top: 30px;
+  }
+
+  .home-title{
+    font-size: 44px;
+    margin-top: 55px;
   }
 
   .specificModes{

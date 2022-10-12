@@ -1,47 +1,33 @@
 {
-
-  "nav_about": "About",
-  "nav_exp": "Experience",
-  "nav_skills": "Skills",
-  "nav_projects": "Projects",
-  "nav_contact": "Contact",
-
-  "hello": "Hello, my name is",
-  "job": "Full-Stack Web Developer",
-  "bcc": "Bachelor of Computer Science",
-  "bct": "Bachelor of Science and Technology",
-  "intro_description": "I structure and develop complete web systems, going through the database, back end and front end",
+  "tictactoe": "TIC TAC TOE",
+  "mode": "Choose a Game Mode",
+  "multiplayer": "Multiplayer",
+  "singleplayer": "Singleplayer",
+  "easy": "Easy",
+  "random": "Random",
+  "hard": "Ultra Hard",
+  "local": "Local Game",
+  "friend": "Play with a friend",
+  "random-opponent": "Random Opponent",
 
 
-  "about_me": "About Me",
-  "about_me_p1": "My taste for video games started my curiosity about programming, which has become a passion since I wrote my first code more than 5 years ago.",
-  "about_me_p2": "Always looking to learn more every day, to be able to develop better and better systems that can help people even more",
-  "about_me_p3": "Everything is better when you work with what you love.",
+  "won": "Won The Game",
+  "tie": "It's a Tie!",
+  "restart": "RESTART GAME",
+  "tie-rain": "tie",
 
 
-  "projects": "Here are my main projects",
-  "projects_general_desc": "",
+  "room-title": "Enter a NickName and the room ID",
+  "join-room": "Join a Room",
+  "nickname": "NickName...",
+  "room-id": "Room ID...",
+  "name-warning": "NickName can't be empty",
+  "id-warning": "Room ID needs at least one letter",
 
-  "my_contacts": "My Contacts",
-  "contact_desc": "Got interested in my work? Let's talk! Send me an e-mail with your ideas.",
 
-  "user_name_placeholder": "Name",
-  "subject_placeholder": "Subject",
-  "message_placeholder": "Message",
-  "user_name_required": "Your name is required!",
-  "user_subject_required": "The e-mail Subject is required!",
-  "user_email_required": "Your e-mail is required!",
-  "invalid_user_email": "Invalid e-mail format!",
-  "message_required": "The message is required!",
-  "message_min_length": "The message must have at least 15 characters!",
-  "submit_button": "Submit",
-  "email_sent": "Thank you for your contact, i will answer your email as soon as possible!",
-  "email_error": "Something went wrong.. please try again later",
-
-  "exp_title" : "Experience and Education",
-
-  "skills_title": "Main Skills",
-
-  "resume": "RESUME"
-
+  "waiting-friend": "Waiting your Opponent",
+  "choose-side": "Choose your side (X always starts)",
+  "hey": "Hey...",
+  "waiting-random": "You are in the queue waiting for an opponent..."
+  
 }
