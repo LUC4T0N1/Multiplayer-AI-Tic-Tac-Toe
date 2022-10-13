@@ -42,9 +42,7 @@
   font-size: 80px;
   color: #eeeeee;
   font-family: Arial, Helvetica, sans-serif;
-  background: linear-gradient(to left, rgb(21, 51, 46), rgb(112, 189, 176));
-  box-shadow: 0 0 7px #f7f7f7, 0 0 7px #ffffff, 0 0 7px #ffffff;
-  text-shadow: 0 0 10px rgb(252, 252, 252), 0 0 20px rgb(121, 118, 118), 0 0 30px #000000, 0 0 40px #000000;
+  background: linear-gradient(to left, rgb(42, 99, 89), rgb(112, 189, 176));
 }
 
 .square-x {
@@ -56,9 +54,7 @@
   font-size: 80px;
   color: #ffffff;
   font-family: Arial, Helvetica, sans-serif;
-  background: linear-gradient(to left, rgb(21, 51, 46), rgb(112, 189, 176));
-  box-shadow: 0 0 7px #000000, 0 0 7px #080000, 0 0 7px #000000;
-  text-shadow: 0 0 10px rgb(252, 252, 252), 0 0 20px rgb(121, 118, 118), 0 0 30px #000000, 0 0 40px #000000;
+  background: linear-gradient(to left, rgb(42, 99, 89), rgb(112, 189, 176));
 }
 
 
@@ -145,4 +141,20 @@ h4 {
   .flex-container{
     flex-direction: column;
   }
+}
+
+@media screen and (max-height: 900px) {
+  .board {
+    width: 550px;
+    height: 550px;
+  }
+
+}
+
+@media screen and (max-height: 800px) {
+  .board {
+    width: 500px;
+    height: 500px;
+  }
+
 }

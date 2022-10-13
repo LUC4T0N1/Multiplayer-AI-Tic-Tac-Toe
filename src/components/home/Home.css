@@ -60,7 +60,7 @@
 .home-title{
   text-align: center;
   font-size: 95px;
-  margin-top: 120px;
+  margin-top: 65px;
   font-weight: 700;
   background: linear-gradient(121.57deg, #00baaa , #5eb381 );
   -webkit-background-clip: text;
@@ -107,5 +107,36 @@
     margin: 6px;
   }
 
+
+}
+
+@media screen and (max-height: 900px) {
+
+  .home-subtitle{
+    font-size: 85px;
+  }
+
+  .home-title{
+    font-size: 80px;
+    margin-top: 55px;
+  }
+
+}
+
+@media screen and (max-height: 785px) {
+
+  .mode{
+    padding: 20px;
+    font-weight: 200;
+    font-size: 25px;
+    margin: 7px;
+  }
+
+  .mode-selected{
+    padding: 20px;
+    font-weight: 200;
+    font-size: 26px;
+    margin: 6px;
+  }
 
 }
