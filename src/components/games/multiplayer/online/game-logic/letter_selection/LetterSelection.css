@@ -30,3 +30,11 @@
   font-size: 60px;
   cursor: pointer;
 }
+
+@media screen and (max-width: 347px) {
+
+  .letter-selection p {
+    font-size: 17px;
+  }
+
+}

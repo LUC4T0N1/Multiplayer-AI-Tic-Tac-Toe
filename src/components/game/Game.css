@@ -18,8 +18,8 @@
 
 
 .board {
-  width: 650px;
-  height: 650px;
+  width: 550px;
+  height: 550px;
   background-color: rgb(252, 252, 252);
   display: flex;
   flex-direction: column;
@@ -39,7 +39,7 @@
   cursor: pointer;
   display: grid;
   place-items: center;
-  font-size: 80px;
+  font-size: 120px;
   color: #eeeeee;
   font-family: Arial, Helvetica, sans-serif;
   background: linear-gradient(to left, rgb(42, 99, 89), rgb(112, 189, 176));
@@ -51,7 +51,7 @@
   cursor: pointer;
   display: grid;
   place-items: center;
-  font-size: 80px;
+  font-size: 120px;
   color: #ffffff;
   font-family: Arial, Helvetica, sans-serif;
   background: linear-gradient(to left, rgb(42, 99, 89), rgb(112, 189, 176));
@@ -100,11 +100,43 @@ h4 {
   font-size: 20px;
 }
 
-@media screen and (max-width: 800px) {
+
+@media screen and (max-width: 1050px) {
+  .board {
+    width: 420px;
+    height: 420px;
+  }
+
+  .square-o {
+    font-size: 85px;
+  }
+
+  .square-x {
+    font-size: 85px;
+  }
+
+  .end-game{
+    font-size: 45px;
+    margin-top: 70px;
+    margin-bottom: -107px;
+  }
+
+  .restart-button{
+    border: none;
+    padding: 12px;
+    font-size: 18px;
+    margin-top: -15px;
+    margin-bottom: 21px;
+  }
+}
+@media screen and (max-width: 740px) {
+  .flex-container{
+    flex-direction: column;
+  }
 
   .board {
-    width: 220px;
-    height: 220px;
+    width: 290px;
+    height: 290px;
     margin-top: 80px;
   }
 
@@ -114,11 +146,48 @@ h4 {
   }
 
   .square-o {
-    font-size: 37px;
+    font-size: 57px;
   }
 
   .square-x {
-    font-size: 37px;
+    font-size: 57px;
+  }
+
+  .end-game{
+    font-size: 28px;
+    margin-top: 40px;
+    margin-bottom: -67px;
+  }
+
+  .restart-button{
+    border: none;
+    padding: 8px;
+    font-size: 15px;
+    margin-top: -25px;
+    margin-bottom: 21px;
+  }
+}
+
+
+@media screen and (max-width: 333px) {
+
+  .board {
+    width: 222px;
+    height: 222px;
+    margin-top: 80px;
+  }
+
+  .chat-window{
+    margin-left: 0;
+    margin-top: 60px;
+  }
+
+  .square-o {
+    font-size: 47px;
+  }
+
+  .square-x {
+    font-size: 47px;
   }
 
   .end-game{
@@ -134,27 +203,97 @@ h4 {
     margin-top: -25px;
     margin-bottom: 21px;
   }
-
 }
 
-@media screen and (max-width: 1015px) {
-  .flex-container{
-    flex-direction: column;
-  }
-}
-
-@media screen and (max-height: 900px) {
+@media screen and (min-width: 1050px) and (max-height: 830px) {
   .board {
-    width: 550px;
-    height: 550px;
+    width: 420px;
+    height: 420px;
   }
 
+  .square-o {
+    font-size: 85px;
+  }
+
+  .square-x {
+    font-size: 85px;
+  }
+
+  .end-game{
+    font-size: 45px;
+    margin-top: 70px;
+    margin-bottom: -107px;
+  }
+
+  .restart-button{
+    border: none;
+    padding: 12px;
+    font-size: 18px;
+    margin-top: -15px;
+    margin-bottom: 21px;
+  }
 }
 
-@media screen and (max-height: 800px) {
+@media screen and (min-width: 1050px) and (max-height: 725px) {
   .board {
-    width: 500px;
-    height: 500px;
+    width: 350px;
+    height: 350px;
   }
 
+  .square-o {
+    font-size: 70px;
+  }
+
+  .square-x {
+    font-size: 70px;
+  }
+
+  .end-game{
+    font-size: 30px;
+    margin-top: 60px;
+    margin-bottom: -127px;
+  }
+
+  .restart-button{
+    border: none;
+    padding: 12px;
+    font-size: 15px;
+    margin-top: -35px;
+    margin-bottom: 21px;
+  }
+}
+
+@media screen and (min-width: 333px) and (max-height: 790px) and  (max-width: 740px){
+  .board {
+    width: 222px;
+    height: 222px;
+    margin-top: 80px;
+  }
+
+  .chat-window{
+    margin-left: 0;
+    margin-top: 60px;
+  }
+
+  .square-o {
+    font-size: 47px;
+  }
+
+  .square-x {
+    font-size: 47px;
+  }
+
+  .end-game{
+    font-size: 20px;
+    margin-top: 40px;
+    margin-bottom: -67px;
+  }
+
+  .restart-button{
+    border: none;
+    padding: 6px;
+    font-size: 13px;
+    margin-top: -25px;
+    margin-bottom: 21px;
+  }
 }

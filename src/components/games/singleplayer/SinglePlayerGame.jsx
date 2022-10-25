@@ -15,6 +15,8 @@ function SinglePlayerGame({ai_type}) {
     setTurn("X");
   }
 
+  const delay = ms => new Promise(res => setTimeout(res, ms));
+
   useEffect(() =>  {
     let win = false
     checkIfTie({board, handleGameOver});
@@ -30,7 +32,8 @@ const handleRestart = () => {
   setResult({ winner: "none", state: "none" });
 }
 
-const handleAITurn = () => {
+const handleAITurn = async () => {
+  await delay(850);
   if(turn === "O" && result.state === "none"){
     let square = null;
       if(ai_type === 1) {

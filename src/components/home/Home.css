@@ -77,14 +77,46 @@
   -webkit-text-fill-color: transparent;
 }
 
-@media screen and (max-width: 800px) {
+@media screen and (max-width: 1037px) {
 
   .home-subtitle{
-    font-size: 40px;
+    font-size: 65px;
   }
 
   .home-title{
-    font-size: 44px;
+    font-size: 75px;
+    margin-top: 55px;
+  }
+
+  .specificModes{
+    flex-direction: column;
+    margin-top: 20px;
+  }
+
+  .mode{
+    padding: 15px;
+    font-weight: 200;
+    font-size: 25px;
+    margin: 7px;
+  }
+
+  .mode-selected{
+    padding: 15px;
+    font-weight: 200;
+    font-size: 25px;
+    margin: 6px;
+  }
+
+}
+
+@media screen and (max-width: 800px) {
+
+  .home-subtitle{
+    font-size: 50px;
+  }
+
+  .home-title{
+    font-size: 54px;
     margin-top: 55px;
   }
 
@@ -110,32 +142,60 @@
 
 }
 
-@media screen and (max-height: 900px) {
+@media screen and (max-width: 550px) {
 
   .home-subtitle{
-    font-size: 85px;
+    font-size: 28px;
   }
 
   .home-title{
-    font-size: 80px;
-    margin-top: 55px;
+    font-size: 30px;
+    margin-top: 45px;
   }
+
+  .specificModes{
+    flex-direction: column;
+    margin-top: 20px;
+  }
+
+  .mode{
+    padding: 12px;
+    font-weight: 200;
+    font-size: 12px;
+    margin: 7px;
+  }
+
+  .mode-selected{
+    padding: 12px;
+    font-weight: 200;
+    font-size: 12px;
+    margin: 6px;
+  }
+
 
 }
 
-@media screen and (max-height: 785px) {
+@media only screen and (max-height: 860px) and (min-width: 1037px){
+  .home-subtitle{
+    font-size: 65px;
+  }
+
+  .home-title{
+    font-size: 75px;
+    margin-top: 55px;
+  }
 
   .mode{
-    padding: 20px;
+    padding: 15px;
     font-weight: 200;
     font-size: 25px;
     margin: 7px;
   }
 
   .mode-selected{
-    padding: 20px;
+    padding: 15px;
     font-weight: 200;
-    font-size: 26px;
+    font-size: 25px;
     margin: 6px;
   }
 
