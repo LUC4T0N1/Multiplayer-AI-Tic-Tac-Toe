@@ -1,38 +1,36 @@
-.home{
+.home {
   display: flex;
-  align-items: center; 
+  align-items: center;
   flex-direction: column;
   width: 100vw;
   height: 100vh;
 }
 
-
-.modes{
+.modes {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.specificModes{
+.specificModes {
   display: flex;
   justify-content: center;
   align-items: center;
   margin-top: 100px;
 }
 
-.mode:hover{
+.mode:hover {
   box-shadow: 0 0 10px #007575, 0 0 20px #007575, 0 0 30px #007575;
 }
 
-
-.mode{
-  font-family: 'Black Ops One', cursive;
+.mode {
+  font-family: "Black Ops One", cursive;
   border: none;
   padding: 35px;
-  background: linear-gradient(121.57deg, #5eb381, #00baaa );
+  background: linear-gradient(121.57deg, #5eb381, #00baaa);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  box-shadow:0 0 9px #80FF72, 0 0 9px #7EE8FA, 0 0 7px #7EE8FA;
+  box-shadow: 0 0 9px #80ff72, 0 0 9px #7ee8fa, 0 0 7px #7ee8fa;
   border-radius: 30px;
   font-weight: 700;
   font-size: 30px;
@@ -41,11 +39,11 @@
   text-decoration: none;
 }
 
-.mode-selected{
-  font-family: 'Black Ops One', cursive;
+.mode-selected {
+  font-family: "Black Ops One", cursive;
   border: none;
   padding: 35px;
-  background: linear-gradient(121.57deg, #5eb381, #00baaa );
+  background: linear-gradient(121.57deg, #5eb381, #00baaa);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   box-shadow: 0 0 10px #0cb8b8, 0 0 20px #149c9c, 0 0 30px #007575;
@@ -57,146 +55,143 @@
   text-decoration: none;
 }
 
-.home-title{
+.home-title {
   text-align: center;
   font-size: 95px;
   margin-top: 65px;
   font-weight: 700;
-  background: linear-gradient(121.57deg, #00baaa , #5eb381 );
+  background: linear-gradient(121.57deg, #00baaa, #5eb381);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.home-subtitle{
+.home-subtitle {
   text-align: center;
   font-size: 90px;
   margin-top: 1px;
   font-weight: 700;
-  background: linear-gradient(121.57deg, #00baaa , #5eb381 );
+  background: linear-gradient(121.57deg, #00baaa, #5eb381);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 @media screen and (max-width: 1037px) {
-
-  .home-subtitle{
+  .home-subtitle {
     font-size: 65px;
   }
 
-  .home-title{
+  .home-title {
     font-size: 75px;
     margin-top: 55px;
   }
 
-  .specificModes{
+  .specificModes {
     flex-direction: column;
     margin-top: 20px;
   }
 
-  .mode{
+  .mode {
     padding: 15px;
     font-weight: 200;
     font-size: 25px;
     margin: 7px;
   }
 
-  .mode-selected{
+  .mode-selected {
     padding: 15px;
     font-weight: 200;
     font-size: 25px;
     margin: 6px;
   }
-
 }
 
 @media screen and (max-width: 800px) {
-
-  .home-subtitle{
+  .home-subtitle {
     font-size: 50px;
   }
 
-  .home-title{
+  .home-title {
     font-size: 54px;
     margin-top: 55px;
   }
 
-  .specificModes{
+  .specificModes {
     flex-direction: column;
     margin-top: 20px;
   }
 
-  .mode{
+  .mode {
     padding: 15px;
     font-weight: 200;
     font-size: 15px;
     margin: 7px;
   }
 
-  .mode-selected{
+  .mode-selected {
     padding: 15px;
     font-weight: 200;
     font-size: 15px;
     margin: 6px;
   }
-
-
 }
 
 @media screen and (max-width: 550px) {
-
-  .home-subtitle{
+  .home-subtitle {
     font-size: 28px;
   }
 
-  .home-title{
+  .home-title {
     font-size: 30px;
     margin-top: 45px;
   }
 
-  .specificModes{
+  .specificModes {
     flex-direction: column;
     margin-top: 20px;
   }
 
-  .mode{
+  .mode {
     padding: 12px;
     font-weight: 200;
     font-size: 12px;
     margin: 7px;
   }
 
-  .mode-selected{
+  .mode-selected {
     padding: 12px;
     font-weight: 200;
     font-size: 12px;
     margin: 6px;
   }
-
-
 }
 
-@media only screen and (max-height: 860px) and (min-width: 1037px){
-  .home-subtitle{
+@media only screen and (max-height: 860px) and (min-width: 1037px) {
+  .home-subtitle {
     font-size: 65px;
   }
 
-  .home-title{
+  .home-title {
     font-size: 75px;
     margin-top: 55px;
   }
 
-  .mode{
+  .mode {
     padding: 15px;
     font-weight: 200;
     font-size: 25px;
     margin: 7px;
   }
 
-  .mode-selected{
+  .mode-selected {
     padding: 15px;
     font-weight: 200;
     font-size: 25px;
     margin: 6px;
   }
+}
 
+@media only screen and (max-height: 700px) and (max-width: 1025px) {
+  .specificModes {
+    flex-direction: row;
+  }
 }
