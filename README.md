@@ -8,6 +8,8 @@ A system that allows you to play tic-tac-toe in different ways.
 It uses some artificial intelligence algorithms, which allows you to play alone against the computer in 3 different difficulties: easy | random | ultra hard.
 In addition, Socket.IO is used to implement a multiplayer mode, which allows you to play against another person while chatting with them, be it a random opponent or a specific friend.
 
+This is the Front End repo of the project, the Back End repo is here: https://github.com/LUC4T0N1/AI-Tic-Tac-Toe-Back-End
+
 ## Functionalities
 In this website you can switch between portuguese and english languages, and dark or white mode using the buttons on the navbar.
 
@@ -48,7 +50,8 @@ In addition to the game, the multiplayer mode provides a live chat for players t
 - HTML | CSS | JAVASCRIPT
 
 ## Deploy
-- Netlify
+- Netlify [Front End]
+- Railway [Back End]
 
 ## How to run the project
 ```bash
@@ -56,17 +59,10 @@ In addition to the game, the multiplayer mode provides a live chat for players t
 git clone https://github.com/LUC4T0N1/Multiplayer-AI-Tic-Tac-Toe
 
 #run project
-open 2 terminals
-On the first one: 
-  cd client
+open a terminal
   npm install
-  create a .env file on the client directory with the content: REACT_APP_SERVER_URL=http://localhost:8080/
+  create a .env file on the client directory with the content: REACT_APP_SERVER_URL=[url to the back end]
   npm start
-On the second terminal:
-  cd server 
-  npm install
-  cd src
-  node index.js
 ```
 
 ## Author
