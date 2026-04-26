@@ -1,0 +1,36 @@
+@keyframes glowPulseC {
+  0%, 100% { text-shadow: 0 0 8px #00e5ff, 0 0 22px #00e5ff, 0 0 45px #00e5ff; }
+  50%       { text-shadow: 0 0 4px #00e5ff, 0 0 14px #00e5ff, 0 0 28px #00e5ff; }
+}
+
+@keyframes glowPulseP {
+  0%, 100% { text-shadow: 0 0 8px #ff2d78, 0 0 22px #ff2d78, 0 0 45px #ff2d78; }
+  50%       { text-shadow: 0 0 4px #ff2d78, 0 0 14px #ff2d78, 0 0 28px #ff2d78; }
+}
+
+@keyframes winPop {
+  0%   { transform: scale(0.8); opacity: 0; }
+  60%  { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes cellPop {
+  0%   { transform: scale(0); }
+  60%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+@keyframes winLineGrow {
+  from { stroke-dashoffset: 600; }
+  to   { stroke-dashoffset: 0; }
+}
+
+@keyframes spFadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spFloatBob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-5px); }
+}

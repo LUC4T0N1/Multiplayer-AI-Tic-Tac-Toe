@@ -1,21 +1,59 @@
-import React from 'react'
-import "./JoinQueueForm.css"
+import { useTranslation } from 'react-i18next';
 
-function JoinQueueForm({setUsername, joinRoom}) {
+const inputBase = {
+  width: '100%', height: 46, padding: '0 14px',
+  background: 'rgba(0,10,40,0.7)',
+  borderRadius: 4, outline: 'none',
+  fontFamily: "'Orbitron', sans-serif", fontSize: 12, letterSpacing: '0.06em',
+  boxSizing: 'border-box',
+};
+
+function JoinQueueForm({ setUsername, joinRoom }) {
+  const { t } = useTranslation();
+
   return (
+    <div style={{
+      background: 'rgba(4,0,20,0.75)',
+      border: '1.5px solid rgba(255,45,120,0.22)',
+      borderRadius: 8, padding: '40px 40px',
+      backdropFilter: 'blur(18px)',
+      boxShadow: '0 0 40px rgba(255,45,120,0.05), 0 0 80px rgba(80,0,120,0.12)',
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
+      width: 320, boxSizing: 'border-box',
+    }}>
+      <div style={{
+        fontFamily: "'Orbitron', sans-serif",
+        fontSize: 'clamp(11px, 2vw, 16px)',
+        fontWeight: 900, letterSpacing: '0.18em',
+        color: '#ff2d78', textTransform: 'uppercase', textAlign: 'center',
+        textShadow: '0 0 14px #ff2d78, 0 0 30px #ff2d7844',
+        marginBottom: 8,
+      }}>{t('queue-title')}</div>
 
-    <div className="joinFriendForm">
-          <h3>Join A Chat</h3>
-          <input
-            type="text"
-            placeholder="Username"
-            onChange={(event) => {
-              setUsername(event.target.value);
-            }}
-          />
-          <button className='join-button' onClick={joinRoom}>Join Queue</button>
-        </div>
-  )
+      <input
+        type="text"
+        placeholder={t('nickname')}
+        onChange={(e) => setUsername(e.target.value)}
+        style={{ ...inputBase, border: '1.5px solid rgba(0,229,255,0.3)', color: '#00e5ff' }}
+      />
+
+      <button
+        onClick={joinRoom}
+        style={{
+          width: '100%', padding: '13px 0', marginTop: 6,
+          background: 'rgba(255,45,120,0.08)',
+          border: '1.5px solid rgba(255,45,120,0.45)',
+          borderRadius: 4, color: '#ff2d78',
+          fontFamily: "'Orbitron', sans-serif", fontSize: 12, fontWeight: 700,
+          letterSpacing: '0.2em', cursor: 'pointer', transition: 'all 0.16s',
+          textTransform: 'uppercase', boxSizing: 'border-box',
+          boxShadow: '0 0 16px rgba(255,45,120,0.10)',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,45,120,0.18)'; e.currentTarget.style.color = '#fff'; }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,45,120,0.08)'; e.currentTarget.style.color = '#ff2d78'; }}
+      >{t('join-queue')}</button>
+    </div>
+  );
 }
 
-export default JoinQueueForm
+export default JoinQueueForm;

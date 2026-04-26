@@ -5,29 +5,27 @@
   "singleplayer": "Singleplayer",
   "easy": "Easy",
   "random": "Random",
-  "hard": "Ultra Hard",
+  "hard": "Impossible",
   "local": "Local Game",
   "friend": "Play with a friend",
   "random-opponent": "Random Opponent",
-
-
+  "choose-mode": "CHOOSE MODE",
+  "choose-diff": "CHOOSE DIFFICULTY",
+  "back": "← BACK",
   "won": "Won The Game",
   "tie": "It's a Tie!",
   "restart": "RESTART GAME",
   "tie-rain": "tie",
-
-
   "room-title": "Enter a NickName and the room ID",
   "join-room": "Join a Room",
   "nickname": "NickName...",
   "room-id": "Room ID...",
   "name-warning": "NickName can't be empty",
   "id-warning": "Room ID needs at least one letter",
-
-
   "waiting-friend": "Waiting your Opponent",
   "choose-side": "Choose your side (X always starts)",
   "hey": "Hey...",
-  "waiting-random": "Waiting for an opponent..."
-  
+  "waiting-random": "Waiting for an opponent...",
+  "join-queue": "JOIN QUEUE",
+  "queue-title": "FIND A MATCH"
 }

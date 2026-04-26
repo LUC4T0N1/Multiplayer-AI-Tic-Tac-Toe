@@ -174,3 +174,36 @@
 .border::after{
   font-size: 20px;
 }
+
+/* ══════════════════════════════
+   RETROWAVE WAITING ANIMATION
+══════════════════════════════ */
+@keyframes retroGlowPulse {
+  0%, 100% {
+    text-shadow: 0 0 10px #00e5ff, 0 0 26px #00e5ff, 0 0 52px #00e5ff88;
+    color: #00e5ff;
+  }
+  50% {
+    text-shadow: 0 0 6px #ff2d78, 0 0 18px #ff2d78, 0 0 40px #ff2d7888;
+    color: #ff2d78;
+  }
+}
+
+@keyframes retroDot {
+  0%, 100% { opacity: 0.1; }
+  50%       { opacity: 1; }
+}
+
+.retro-waiting-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(16px, 3.5vw, 34px);
+  font-weight: 900;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  animation: retroGlowPulse 2.6s ease-in-out infinite;
+  text-align: center;
+}
+
+.retro-dot-1 { display: inline-block; animation: retroDot 1.4s 0.0s ease-in-out infinite; }
+.retro-dot-2 { display: inline-block; animation: retroDot 1.4s 0.25s ease-in-out infinite; }
+.retro-dot-3 { display: inline-block; animation: retroDot 1.4s 0.5s ease-in-out infinite; }

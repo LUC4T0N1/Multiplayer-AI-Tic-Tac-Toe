@@ -1,19 +1,13 @@
-@import url("https://fonts.googleapis.com/css?family=Open+Sans:300,400,700");
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=VT323&family=Open+Sans:wght@300;400;700&display=swap");
 
 .App {
   width: 100vw;
   height: 100vh;
 }
 body {
-  margin: 0%;
-  padding: 0%;
+  margin: 0;
+  padding: 0;
 }
-html{
-  font-family: 'Black Ops One', cursive;
+html {
+  font-family: 'Orbitron', sans-serif;
 }
-
-/* @media screen and (max-width: 1015px) {
-  .App{
-    height: 130vh;
-  }
-} */

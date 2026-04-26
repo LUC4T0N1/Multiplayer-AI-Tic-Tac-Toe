@@ -1,8 +1,6 @@
 import React, {useEffect ,useState} from "react";
-import Square from "../../../game/Square";
 import {checkIfTie, checkWin} from  "../../../../utils/EndGame";
-import Board from "../../../game/Board";
-import Game from "../../../game/Game";
+import SinglePlayerScreen from "../../../game/SinglePlayerScreen";
 
 const GameLocalMultiplayer = () => {
   const [board, setBoard] = useState(["","","","","","","","",""])
@@ -41,7 +39,7 @@ const handleRestart = () => {
   };
 
   return (
-    <Game result={result} chooseSquare={chooseSquare} handleRestart={handleRestart} board={board}/>
+    <SinglePlayerScreen result={result} chooseSquare={chooseSquare} handleRestart={handleRestart} board={board}/>
   )
 }
 

@@ -1,8 +1,7 @@
 import {useEffect ,useState} from "react";
 import {checkIfTie, checkWin} from  "../../../utils/EndGame";
 import {findBestMove, findWorstMove, findRandomMove} from  "../../../utils/AILogic";
-import "../../game/Game.css"
-import Game from "../../game/Game";
+import SinglePlayerScreen from "../../game/SinglePlayerScreen";
 
 function SinglePlayerGame({ai_type}) {
   const [board, setBoard] = useState(["","","","","","","","",""])
@@ -76,7 +75,7 @@ const handleAITurn = async () => {
   };
  
   return (
-   <Game result={result} chooseSquare={chooseSquare} handleRestart={handleRestart} board={board}/>
+   <SinglePlayerScreen result={result} chooseSquare={chooseSquare} handleRestart={handleRestart} board={board}/>
   )
 }
 

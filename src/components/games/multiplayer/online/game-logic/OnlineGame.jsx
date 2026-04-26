@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from "react";
 import LetterSelection from "./letter_selection/LetterSelection";
-import Chat from "../../../../chat/Chat";
 import {checkIfTie, checkWin} from  "../../../../../utils/EndGame";
-import Board from "../../../../game/Board";
-import "../../../../game/Game.css"
-import Game from "../../../../game/Game";
+import OnlineScreen from "../../../../game/OnlineScreen";
 
 const OnlineGame = ({ socket, username, room, isOtherPlayerReady, setIsOtherPlayerReady }) => {
 
@@ -120,15 +117,21 @@ const OnlineGame = ({ socket, username, room, isOtherPlayerReady, setIsOtherPlay
   
 
 
+  const letterSelectionNode = (!oIsSelected.selected || !xIsSelected.selected) ? (
+    <LetterSelection handleXSelection={handleXSelection} xIsSelected={xIsSelected} handleOSelection={handleOSelection} oIsSelected={oIsSelected}/>
+  ) : null;
+
   return (
-    <div className="flex-container">
-      {(!oIsSelected.selected || !xIsSelected.selected) ? <LetterSelection handleXSelection={handleXSelection} xIsSelected={xIsSelected} handleOSelection={handleOSelection} oIsSelected={oIsSelected}/> : 
-         <Game result={result} chooseSquare={chooseSquare} handleRestart={handleRestart} board={board}/>
-      }    
-
-
-      <Chat socket={socket} username={username} room={room}/>
-    </div>
+    <OnlineScreen
+      result={result}
+      chooseSquare={chooseSquare}
+      handleRestart={handleRestart}
+      board={board}
+      socket={socket}
+      username={username}
+      room={room}
+      letterSelectionNode={letterSelectionNode}
+    />
   );
 };
 
