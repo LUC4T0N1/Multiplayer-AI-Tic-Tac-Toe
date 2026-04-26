@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
+import isMobile from "../../utils/isMobile";
 import "./Home.css";
 
 function NeonButton({ children, onClick, to, color = '#00e5ff', size = 'md', delay = 0 }) {
@@ -56,6 +57,7 @@ function Home({ socket }) {
   }, [location]);
 
   useEffect(() => {
+    if (isMobile) return;
     const cv = canvasRef.current;
     if (!cv) return;
     const ctx = cv.getContext('2d');
@@ -399,7 +401,14 @@ function Home({ socket }) {
 
   return (
     <div className="home-container">
-      <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', zIndex: 0, display: 'block' }} />
+      {isMobile ? (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 0,
+          background: 'linear-gradient(180deg, #040010 0%, #0e0030 15%, #500062 45%, #cc0062 65%, #240048 80%, #080018 100%)',
+        }} />
+      ) : (
+        <canvas ref={canvasRef} style={{ position: 'fixed', inset: 0, width: '100%', height: '100%', zIndex: 0, display: 'block' }} />
+      )}
 
       {/* Scanlines overlay */}
       <div style={{

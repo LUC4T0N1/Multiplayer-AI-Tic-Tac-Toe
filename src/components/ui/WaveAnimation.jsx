@@ -1,5 +1,14 @@
 import { useEffect, useRef } from "react";
-import * as THREE from "three";
+import {
+  WebGLRenderer,
+  PerspectiveCamera,
+  Scene,
+  BufferGeometry,
+  Float32BufferAttribute,
+  ShaderMaterial,
+  Color,
+  Points,
+} from "three";
 
 function WaveAnimation({
   width,
@@ -26,9 +35,9 @@ function WaveAnimation({
     const fov = 60;
     const fovRad = (fov / 2) * (Math.PI / 180);
     const dist = h / 2 / Math.tan(fovRad);
-    const clock = new THREE.Clock();
+    const startTime = performance.now();
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(w, h);
     renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(dpr);
@@ -36,12 +45,12 @@ function WaveAnimation({
 
     container.appendChild(renderer.domElement);
 
-    const camera = new THREE.PerspectiveCamera(fov, w / h, 1, dist * 2);
+    const camera = new PerspectiveCamera(fov, w / h, 1, dist * 2);
     camera.position.set(0, 0, 10);
 
-    const scene = new THREE.Scene();
+    const scene = new Scene();
 
-    const geo = new THREE.BufferGeometry();
+    const geo = new BufferGeometry();
     const positions = [];
     const gridWidth = 400 * (w / h);
     const depth = 400;
@@ -52,13 +61,13 @@ function WaveAnimation({
       }
     }
 
-    geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geo.setAttribute("position", new Float32BufferAttribute(positions, 3));
 
-    const mat = new THREE.ShaderMaterial({
+    const mat = new ShaderMaterial({
       uniforms: {
         u_time: { value: 0.0 },
         u_point_size: { value: pointSize },
-        u_color: { value: new THREE.Color(particleColor) },
+        u_color: { value: new Color(particleColor) },
       },
       vertexShader: `
         #define M_PI 3.1415926535897932384626433832795
@@ -85,11 +94,11 @@ function WaveAnimation({
       transparent: true,
     });
 
-    const points = new THREE.Points(geo, mat);
+    const points = new Points(geo, mat);
     scene.add(points);
 
     function render() {
-      mat.uniforms.u_time.value = clock.getElapsedTime();
+      mat.uniforms.u_time.value = (performance.now() - startTime) / 1000;
       renderer.render(scene, camera);
       animationIdRef.current = requestAnimationFrame(render);
     }

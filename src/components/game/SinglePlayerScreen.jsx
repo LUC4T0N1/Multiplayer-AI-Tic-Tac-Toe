@@ -5,6 +5,7 @@ import { Patterns } from '../../utils/EndGame';
 import MeshBackground from '../ui/MeshBackground';
 import WaveAnimation from '../ui/WaveAnimation';
 import RetrowaveMountains from '../ui/RetrowaveMountains';
+import isMobile from '../../utils/isMobile';
 import './SinglePlayerScreen.css';
 
 /* ── SVG X mark ── */
@@ -177,11 +178,9 @@ function SinglePlayerScreen({ result, chooseSquare, handleRestart, board }) {
   const lang = (i18n.language || 'en').substring(0, 2);
   const gameOver = result.state !== 'none';
 
-  const BOARD_SIZE = Math.min(
-    window.innerWidth * 0.46,
-    window.innerHeight * 0.58,
-    500
-  );
+  const BOARD_SIZE = isMobile
+    ? Math.min(window.innerWidth * 0.80, window.innerHeight * 0.44, 380)
+    : Math.min(window.innerWidth * 0.46, window.innerHeight * 0.58, 500);
   const CELL = BOARD_SIZE / 3;
   const lineColor = 'rgba(0,200,255,0.90)';
 
@@ -240,12 +239,14 @@ function SinglePlayerScreen({ result, chooseSquare, handleRestart, board }) {
       <MeshBackground zIndex={0} />
 
       {/* WaveAnimation */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 1, opacity: 0.35, pointerEvents: 'none' }}>
-        <WaveAnimation particleColor="#ffffff" waveSpeed={1.5} waveIntensity={12} pointSize={1.5} gridDistance={5} />
-      </div>
+      {!isMobile && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1, opacity: 0.35, pointerEvents: 'none' }}>
+          <WaveAnimation particleColor="#ffffff" waveSpeed={1.5} waveIntensity={12} pointSize={1.5} gridDistance={5} />
+        </div>
+      )}
 
       {/* Retrowave mountains — fades in on game over */}
-      <RetrowaveMountains opacity={gameOver ? 1 : 0} zIndex={2} />
+      {!isMobile && <RetrowaveMountains opacity={gameOver ? 1 : 0} zIndex={2} />}
 
       {/* Scanlines */}
       <div style={{
@@ -259,7 +260,9 @@ function SinglePlayerScreen({ result, chooseSquare, handleRestart, board }) {
         position: 'relative', zIndex: 10, width: '100%', height: '100%',
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        padding: '16px 20px',
+        padding: isMobile ? '12px 16px' : '16px 20px',
+        boxSizing: 'border-box',
+        overflowY: 'auto',
       }}>
 
         {/* Back */}
@@ -294,7 +297,7 @@ function SinglePlayerScreen({ result, chooseSquare, handleRestart, board }) {
 
           {/* Board card background */}
           <div style={{
-            position: 'absolute', inset: -18,
+            position: 'absolute', inset: isMobile ? -10 : -18,
             background: 'rgba(4,0,20,0.55)',
             border: `1.5px solid ${turnColor}44`,
             borderRadius: 10,

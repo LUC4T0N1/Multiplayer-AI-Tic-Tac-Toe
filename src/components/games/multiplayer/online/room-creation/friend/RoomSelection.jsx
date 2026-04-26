@@ -6,6 +6,7 @@ import "../RoomCreation.css";
 import { useTranslation } from 'react-i18next';
 import MeshBackground from '../../../../../ui/MeshBackground';
 import WaveAnimation from '../../../../../ui/WaveAnimation';
+import isMobile from '../../../../../../utils/isMobile';
 
 function RoomSelection({ socket }) {
   const { t } = useTranslation();
@@ -66,9 +67,11 @@ function RoomSelection({ socket }) {
       <MeshBackground zIndex={0} />
 
       {/* WaveAnimation */}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: 0.35, pointerEvents: 'none' }}>
-        <WaveAnimation particleColor="#ffffff" waveSpeed={1.5} waveIntensity={12} pointSize={1.5} gridDistance={5} />
-      </div>
+      {!isMobile && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 1, opacity: 0.35, pointerEvents: 'none' }}>
+          <WaveAnimation particleColor="#ffffff" waveSpeed={1.5} waveIntensity={12} pointSize={1.5} gridDistance={5} />
+        </div>
+      )}
 
       {/* Overlay for card readability */}
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,12,0.38)', zIndex: 2 }} />

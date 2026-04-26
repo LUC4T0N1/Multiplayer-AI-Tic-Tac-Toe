@@ -6,6 +6,7 @@ import Chat from '../chat/Chat';
 import MeshBackground from '../ui/MeshBackground';
 import WaveAnimation from '../ui/WaveAnimation';
 import RetrowaveMountains from '../ui/RetrowaveMountains';
+import isMobile from '../../utils/isMobile';
 import './SinglePlayerScreen.css';
 
 /* ── SVG X mark ── */
@@ -187,9 +188,9 @@ function OnlineScreen({ result, chooseSquare, handleRestart, board, socket, user
   }, []);
 
   const BOARD_SIZE = Math.min(
-    window.innerWidth * (isWide ? 0.36 : 0.82),
-    window.innerHeight * (isWide ? 0.50 : 0.42),
-    isWide ? 390 : 460
+    window.innerWidth * (isWide ? 0.36 : 0.78),
+    window.innerHeight * (isWide ? 0.50 : 0.38),
+    isWide ? 390 : 380
   );
   const CELL = BOARD_SIZE / 3;
   const lineColor = 'rgba(0,200,255,0.90)';
@@ -249,12 +250,14 @@ function OnlineScreen({ result, chooseSquare, handleRestart, board, socket, user
       <MeshBackground zIndex={0} />
 
       {/* WaveAnimation */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 1, opacity: 0.35, pointerEvents: 'none' }}>
-        <WaveAnimation particleColor="#ffffff" waveSpeed={1.5} waveIntensity={12} pointSize={1.5} gridDistance={5} />
-      </div>
+      {!isMobile && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1, opacity: 0.35, pointerEvents: 'none' }}>
+          <WaveAnimation particleColor="#ffffff" waveSpeed={1.5} waveIntensity={12} pointSize={1.5} gridDistance={5} />
+        </div>
+      )}
 
       {/* Retrowave mountains — fades in on game over */}
-      <RetrowaveMountains opacity={gameOver ? 1 : 0} zIndex={2} />
+      {!isMobile && <RetrowaveMountains opacity={gameOver ? 1 : 0} zIndex={2} />}
 
       {/* Scanlines */}
       <div style={{
@@ -292,6 +295,7 @@ function OnlineScreen({ result, chooseSquare, handleRestart, board, socket, user
           display: 'flex', flexDirection: 'column',
           alignItems: 'center', justifyContent: 'center',
           flex: isWide ? '0 0 auto' : 'none',
+          width: isWide ? 'auto' : '100%',
         }}>
           {isSelecting ? (
             <div style={{ width: BOARD_SIZE + 36, maxWidth: '90vw' }}>
@@ -320,7 +324,7 @@ function OnlineScreen({ result, chooseSquare, handleRestart, board, socket, user
 
                 {/* Board card background */}
                 <div style={{
-                  position: 'absolute', inset: -16,
+                  position: 'absolute', inset: isWide ? -16 : -10,
                   background: 'rgba(4,0,20,0.55)',
                   border: `1.5px solid ${turnColor}44`,
                   borderRadius: 10,
