@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import isMobile from "../../utils/isMobile";
@@ -21,6 +21,7 @@ function NeonButton({ children, onClick, to, color = '#00e5ff', size = 'md', del
     letterSpacing: '0.12em',
     cursor: 'pointer',
     transition: 'all 0.16s',
+    textAlign: 'center',
     boxShadow: hov
       ? `0 0 24px ${color}99, 0 0 48px ${color}44, inset 0 0 16px ${color}22`
       : `0 0 8px ${color}33`,
@@ -48,7 +49,7 @@ function NeonButton({ children, onClick, to, color = '#00e5ff', size = 'md', del
 function Home({ socket }) {
   const location = useLocation();
   const { t, i18n } = useTranslation();
-  const [screen, setScreen] = useState('home');
+  const [screen, setScreen] = useState('games');
   const canvasRef = useRef(null);
   const currentLang = (i18n.language || 'en').substring(0, 2);
 
@@ -448,14 +449,14 @@ function Home({ socket }) {
             fontFamily: "'VT323', monospace", fontSize: 28, color: '#ff2d78',
             letterSpacing: '0.7em', textShadow: '0 0 16px #ff2d78, 0 0 32px #ff2d7855',
             marginBottom: 10, opacity: 0.82,
-          }}>✕ ○ ✕</div>
+          }}>{screen === 'games' ? '◈ ◈ ◈' : '✕ ○ ✕'}</div>
           <h1 style={{
             fontFamily: "'Orbitron', sans-serif",
             fontSize: 'clamp(26px, 5.5vw, 62px)',
             fontWeight: 900, letterSpacing: '0.12em', color: '#fff',
             animation: 'logoIn 1s cubic-bezier(.22,1,.36,1) both, glowPulse 3.2s 1s ease-in-out infinite',
             lineHeight: 1.1, textTransform: 'uppercase', margin: 0,
-          }}>{t('tictactoe')}</h1>
+          }}>{screen === 'games' ? 'ARCADE' : t('tictactoe')}</h1>
           <div style={{
             height: 3, width: '74%', margin: '14px auto 0',
             background: 'linear-gradient(90deg, transparent, #ff2d78, #cc00ff, #00e5ff, transparent)',
@@ -473,6 +474,23 @@ function Home({ socket }) {
           boxShadow: '0 0 40px rgba(180,0,255,0.18), 0 0 80px rgba(100,0,255,0.08), inset 0 0 40px rgba(100,0,255,0.04)',
           animation: 'neonBorder 3.5s ease-in-out infinite',
         }}>
+          {screen === 'games' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18, animation: 'fadeUp 0.5s both' }}>
+              <NeonButton color="#ff2d78" size="lg" onClick={() => setScreen('home')} delay={0.10}>
+                {t('tictactoe')}
+              </NeonButton>
+              <NeonButton color="#cc00ff" size="lg" to="/pacman" delay={0.20}>
+                PACMAN
+              </NeonButton>
+              <NeonButton color="#00ffcc" size="lg" to="/snake" delay={0.30}>
+                SNAKE
+              </NeonButton>
+              <NeonButton color="#ffb852" size="lg" to="/breakout" delay={0.40}>
+                BREAKOUT
+              </NeonButton>
+            </div>
+          )}
+
           {screen === 'home' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18, animation: 'fadeUp 0.5s both' }}>
               <NeonButton color="#ff2d78" size="lg" onClick={() => setScreen('multi')} delay={0.10}>
@@ -494,7 +512,7 @@ function Home({ socket }) {
                 onClick={() => setScreen('home')}
                 style={backBtnStyle}
                 onMouseEnter={e => e.currentTarget.style.color = 'rgba(188, 222, 241, 0.85)'}
-                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255, 255, 255, 1)32)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.32)'}
               >{t('back')}</button>
             </div>
           )}
@@ -509,7 +527,7 @@ function Home({ socket }) {
                 onClick={() => setScreen('home')}
                 style={backBtnStyle}
                 onMouseEnter={e => e.currentTarget.style.color = 'rgba(188, 222, 241, 0.85)'}
-                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255, 255, 255, 1)32)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.32)'}
               >{t('back')}</button>
             </div>
           )}

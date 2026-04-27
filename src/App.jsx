@@ -8,6 +8,9 @@ const RoomSelection = lazy(() => import("./components/games/multiplayer/online/r
 const GameLocalMultiplayer = lazy(() => import("./components/games/multiplayer/local/GameLocalMultiplayer"));
 const SinglePlayerGame = lazy(() => import("./components/games/singleplayer/SinglePlayerGame"));
 const Queue = lazy(() => import("./components/games/multiplayer/online/room-creation/random/Queue"));
+const PacmanGame = lazy(() => import("./components/games/pacman/PacmanGame"));
+const SnakeGame  = lazy(() => import("./components/games/snake/SnakeGame"));
+const BreakoutGame = lazy(() => import("./components/games/breakout/BreakoutGame"));
 
 const LoadingFallback = () => (
   <div style={{ width: '100vw', height: '100vh', background: '#050010' }} />
@@ -26,6 +29,9 @@ function App({ socket }) {
             <Route path="/multiplayer/local" element={<GameLocalMultiplayer />} />
             <Route path="/multiplayer/friendly" element={<RoomSelection socket={socket} />} />
             <Route path="/multiplayer/random" element={<Queue socket={socket} />} />
+            <Route path="/pacman" element={<PacmanGame />} />
+            <Route path="/snake"  element={<SnakeGame />} />
+            <Route path="/breakout" element={<BreakoutGame />} />
             <Route path='*' element={<Error />} />
           </Routes>
         </Suspense>
