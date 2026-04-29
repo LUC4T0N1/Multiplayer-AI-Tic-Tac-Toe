@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import MeshBackground from '../../ui/MeshBackground';
 import WaveAnimation from '../../ui/WaveAnimation';
+import Leaderboard from '../../ui/Leaderboard'; // Importado
 import isMobile from '../../../utils/isMobile';
 
 const BASE_W = 480;
@@ -20,9 +21,9 @@ const ROW_COLORS = [
 ];
 
 function getBallSpeed(level) { return Math.min(520, 240 + (level - 1) * 32); }
-function getPaddleW(level)   { return Math.max(58, 108 - (level - 1) * 6); }
-function getPaddleY()        { return BASE_H - 44; }
-function getBrickW()         { return (BASE_W - BRICK_GAP * (BRICK_COLS + 1)) / BRICK_COLS; }
+function getPaddleW(level) { return Math.max(58, 108 - (level - 1) * 6); }
+function getPaddleY() { return BASE_H - 44; }
+function getBrickW() { return (BASE_W - BRICK_GAP * (BRICK_COLS + 1)) / BRICK_COLS; }
 
 function buildBricks(level) {
   const rows = Math.min(3 + level, 9);
@@ -79,18 +80,55 @@ function saveBest(s) { if (s > getBest()) localStorage.setItem('breakoutBest', S
 
 export default function BreakoutGame() {
   const canvasRef = useRef(null);
-  const stateRef  = useRef(buildState());
-  const keysRef   = useRef({});
-  const rafRef    = useRef(null);
-  const lastTRef  = useRef(null);
-  const scaleRef  = useRef(1);
-  const trailRef  = useRef([]);
+  const stateRef = useRef(buildState());
+  const keysRef = useRef({});
+  const rafRef = useRef(null);
+  const lastTRef = useRef(null);
+  const scaleRef = useRef(1);
+  const trailRef = useRef([]);
+  const sessionTokenRef = useRef(null);
+  const lbVisibleRef = useRef(false);
+
   const [ui, setUi] = useState({ status: 'idle', score: 0, level: 1, lives: LIVES_START, best: getBest() });
+  const [lbVisible, setLbVisible] = useState(false);
+
+  const requestSession = useCallback(async () => {
+    try {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/leaderboard/breakout/session`, {
+        method: 'POST',
+      });
+      const json = await res.json();
+      sessionTokenRef.current = json.sessionToken || null;
+    } catch {
+      sessionTokenRef.current = null;
+    }
+  }, []);
 
   const syncUi = useCallback(() => {
     const s = stateRef.current;
     setUi({ status: s.status, score: s.score, level: s.level, lives: s.lives, best: getBest() });
   }, []);
+
+  const startGame = useCallback(() => {
+    stateRef.current = buildState(1, 0, LIVES_START);
+    stateRef.current.status = 'idle';
+    trailRef.current = [];
+    setLbVisible(false);
+    lbVisibleRef.current = false;
+    requestSession();
+    syncUi();
+  }, [requestSession, syncUi]);
+
+  useEffect(() => {
+    requestSession();
+  }, [requestSession]);
+
+  useEffect(() => {
+    if (ui.status === 'gameover') {
+      setLbVisible(true);
+      lbVisibleRef.current = true;
+    }
+  }, [ui.status]);
 
   // ── draw ──────────────────────────────────────────────────────────────────
   const draw = useCallback((ctx, scale) => {
@@ -100,11 +138,9 @@ export default function BreakoutGame() {
 
     ctx.clearRect(0, 0, W, H);
 
-    // background panel
     ctx.fillStyle = 'rgba(5,0,16,0.82)';
     fillRRect(ctx, 0, 0, W, H, 12 * scale);
 
-    // border glow
     ctx.save();
     ctx.strokeStyle = '#cc00ff';
     ctx.lineWidth = 2 * scale;
@@ -113,7 +149,6 @@ export default function BreakoutGame() {
     ctx.strokeRect(1 * scale, 1 * scale, W - 2 * scale, H - 2 * scale);
     ctx.restore();
 
-    // bricks
     for (const b of s.bricks) {
       if (!b.alive) continue;
       const ratio = b.hp / b.maxHp;
@@ -123,7 +158,6 @@ export default function BreakoutGame() {
       ctx.shadowColor = b.color;
       ctx.shadowBlur = 8 * scale;
       fillRRect(ctx, b.x * scale, b.y * scale, b.w * scale, b.h * scale, 3 * scale);
-      // hp indicator stripe
       if (b.maxHp > 1 && b.hp > 1) {
         ctx.fillStyle = 'rgba(255,255,255,0.35)';
         ctx.shadowBlur = 0;
@@ -132,7 +166,6 @@ export default function BreakoutGame() {
       ctx.restore();
     }
 
-    // ball trail
     for (let i = 0; i < trailRef.current.length; i++) {
       const tr = trailRef.current[i];
       const a = (i / trailRef.current.length) * 0.35;
@@ -147,7 +180,6 @@ export default function BreakoutGame() {
       ctx.restore();
     }
 
-    // ball
     ctx.save();
     ctx.fillStyle = '#00ffcc';
     ctx.shadowColor = '#00ffcc';
@@ -157,7 +189,6 @@ export default function BreakoutGame() {
     ctx.fill();
     ctx.restore();
 
-    // paddle
     const pd = s.paddle;
     ctx.save();
     ctx.fillStyle = '#ff2d78';
@@ -166,7 +197,6 @@ export default function BreakoutGame() {
     fillRRect(ctx, pd.x * scale, pd.y * scale, pd.w * scale, pd.h * scale, 6 * scale);
     ctx.restore();
 
-    // overlay messages
     if (s.status === 'idle') {
       ctx.save();
       ctx.fillStyle = 'rgba(5,0,16,0.55)';
@@ -214,16 +244,14 @@ export default function BreakoutGame() {
       let { x, y, vx, vy } = s.ball;
       const pd = s.paddle;
 
-      // keyboard paddle
       const pdSpd = 420;
-      if (keysRef.current['ArrowLeft']  || keysRef.current['a'] || keysRef.current['A']) {
+      if (keysRef.current['ArrowLeft'] || keysRef.current['a'] || keysRef.current['A']) {
         pd.x = Math.max(0, pd.x - pdSpd * rawDt);
       }
       if (keysRef.current['ArrowRight'] || keysRef.current['d'] || keysRef.current['D']) {
         pd.x = Math.min(BASE_W - pd.w, pd.x + pdSpd * rawDt);
       }
 
-      // move ball (sub-step for safety)
       const steps = 3;
       const dt = rawDt / steps;
       let dead = false;
@@ -231,12 +259,10 @@ export default function BreakoutGame() {
         x += vx * spd * dt;
         y += vy * spd * dt;
 
-        // wall collisions
-        if (x - BALL_R < 0)        { x = BALL_R;         vx = Math.abs(vx); }
-        if (x + BALL_R > BASE_W)   { x = BASE_W - BALL_R; vx = -Math.abs(vx); }
-        if (y - BALL_R < 0)        { y = BALL_R;         vy = Math.abs(vy); }
+        if (x - BALL_R < 0) { x = BALL_R; vx = Math.abs(vx); }
+        if (x + BALL_R > BASE_W) { x = BASE_W - BALL_R; vx = -Math.abs(vx); }
+        if (y - BALL_R < 0) { y = BALL_R; vy = Math.abs(vy); }
 
-        // paddle collision
         if (
           vy > 0 &&
           y + BALL_R >= pd.y &&
@@ -246,14 +272,12 @@ export default function BreakoutGame() {
         ) {
           y = pd.y - BALL_R;
           vy = -Math.abs(vy);
-          // angle based on hit position
           const rel = (x - (pd.x + pd.w / 2)) / (pd.w / 2);
           vx = rel * 1.2;
           const len = Math.sqrt(vx * vx + vy * vy);
           vx /= len; vy /= len;
         }
 
-        // brick collisions
         for (const b of s.bricks) {
           if (!b.alive) continue;
           const ol = x + BALL_R - b.x;
@@ -274,7 +298,6 @@ export default function BreakoutGame() {
           }
         }
 
-        // ball lost
         if (y - BALL_R > BASE_H) {
           dead = true;
         }
@@ -282,7 +305,6 @@ export default function BreakoutGame() {
 
       s.ball.x = x; s.ball.y = y; s.ball.vx = vx; s.ball.vy = vy;
 
-      // trail
       trailRef.current.push({ x, y });
       if (trailRef.current.length > 10) trailRef.current.shift();
 
@@ -294,7 +316,6 @@ export default function BreakoutGame() {
           saveBest(s.score);
           syncUi();
         } else {
-          // reset ball to paddle
           const pw = getPaddleW(s.level);
           s.paddle.x = BASE_W / 2 - pw / 2;
           s.ball.x = BASE_W / 2;
@@ -305,13 +326,14 @@ export default function BreakoutGame() {
           syncUi();
         }
       } else {
-        // check win (all bricks cleared)
         if (s.bricks.every(b => !b.alive)) {
           s.status = 'levelcomplete';
           syncUi();
           setTimeout(() => {
             const next = s.level + 1;
-            stateRef.current = buildState(next, s.score, s.lives);
+            const score = stateRef.current.score;
+            const lives = stateRef.current.lives;
+            stateRef.current = buildState(next, score, lives);
             stateRef.current.status = 'idle';
             trailRef.current = [];
             syncUi();
@@ -339,7 +361,7 @@ export default function BreakoutGame() {
   // ── mouse / touch controls ────────────────────────────────────────────────
   const handleMouseMove = useCallback((e) => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    if (!canvas || lbVisibleRef.current) return;
     const rect = canvas.getBoundingClientRect();
     const scale = scaleRef.current;
     const mx = (e.clientX - rect.left) / scale;
@@ -351,6 +373,7 @@ export default function BreakoutGame() {
   }, []);
 
   const handleTouchMove = useCallback((e) => {
+    if (lbVisibleRef.current) return;
     e.preventDefault();
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -364,19 +387,21 @@ export default function BreakoutGame() {
     }
   }, []);
 
-  const handleClick = useCallback(() => launch(), [launch]);
+  const handleClick = useCallback(() => {
+    if (!lbVisibleRef.current) launch();
+  }, [launch]);
 
   const handleKeyDown = useCallback((e) => {
+    if (lbVisibleRef.current) return;
     keysRef.current[e.key] = true;
     if (e.key === ' ' || e.key === 'Enter') launch();
-    if (['ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+    if (['ArrowLeft', 'ArrowRight', ' '].includes(e.key)) e.preventDefault();
   }, [launch]);
 
   const handleKeyUp = useCallback((e) => {
     keysRef.current[e.key] = false;
   }, []);
 
-  // ── resize ────────────────────────────────────────────────────────────────
   const resize = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -384,81 +409,46 @@ export default function BreakoutGame() {
     const maxH = window.innerHeight * 0.82;
     const scale = Math.min(maxW / BASE_W, maxH / BASE_H, 1);
     scaleRef.current = scale;
-    canvas.width  = BASE_W * scale;
+    canvas.width = BASE_W * scale;
     canvas.height = BASE_H * scale;
-    canvas.style.width  = `${BASE_W * scale}px`;
+    canvas.style.width = `${BASE_W * scale}px`;
     canvas.style.height = `${BASE_H * scale}px`;
   }, []);
 
-  // ── mount ────────────────────────────────────────────────────────────────
   useEffect(() => {
     resize();
     window.addEventListener('resize', resize);
     window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup',   handleKeyUp);
+    window.addEventListener('keyup', handleKeyUp);
     rafRef.current = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener('resize', resize);
       window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup',   handleKeyUp);
+      window.removeEventListener('keyup', handleKeyUp);
     };
   }, [resize, handleKeyDown, handleKeyUp, tick]);
 
   const s = ui;
-
-  // lives hearts
   const hearts = Array.from({ length: LIVES_START }, (_, i) => i < s.lives ? '♥' : '♡');
-
-  const overlayStyle = {
-    position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column',
-    alignItems: 'center', justifyContent: 'center', zIndex: 20,
-    background: 'rgba(5,0,16,0.80)',
-  };
-  const neonBtn = (color) => ({
-    background: 'transparent', border: `2px solid ${color}`,
-    color, padding: '12px 36px', borderRadius: 8, fontSize: 18,
-    fontFamily: "'Courier New', monospace", fontWeight: 'bold',
-    cursor: 'pointer', letterSpacing: 2,
-    boxShadow: `0 0 14px ${color}88`, transition: 'box-shadow 0.2s',
-    textDecoration: 'none', display: 'inline-block', textAlign: 'center',
-  });
-
-  const startGame = () => {
-    stateRef.current = buildState(1, 0, LIVES_START);
-    stateRef.current.status = 'idle';
-    trailRef.current = [];
-    syncUi();
-  };
-
-  const nextLevel = () => {
-    const cur = stateRef.current;
-    stateRef.current = buildState(cur.level, cur.score, cur.lives);
-    stateRef.current.status = 'idle';
-    trailRef.current = [];
-    syncUi();
-  };
 
   return (
     <div style={{ width: '100vw', minHeight: '100vh', background: '#050010', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', overflow: 'hidden', position: 'relative' }}>
       <MeshBackground />
       {!isMobile && <WaveAnimation />}
 
-      {/* header */}
       <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px 0', boxSizing: 'border-box', position: 'relative', zIndex: 10 }}>
         <Link to="/" style={{ color: '#cc00ff', fontFamily: "'Courier New', monospace", fontSize: 14, textDecoration: 'none', letterSpacing: 1, textShadow: '0 0 8px #cc00ff' }}>← HOME</Link>
         <span style={{ color: '#ffb852', fontFamily: "'Courier New', monospace", fontSize: 22, fontWeight: 'bold', letterSpacing: 4, textShadow: '0 0 12px #ffb852' }}>BREAKOUT</span>
         <span style={{ color: '#ff2d78', fontFamily: "'Courier New', monospace", fontSize: 14, letterSpacing: 1, textShadow: '0 0 8px #ff2d78' }}>BEST {getBest()}</span>
       </div>
 
-      {/* hud */}
       <div style={{ display: 'flex', gap: 28, alignItems: 'center', padding: '8px 0 6px', position: 'relative', zIndex: 10 }}>
         <span style={{ color: '#00ffcc', fontFamily: "'Courier New', monospace", fontSize: 15, textShadow: '0 0 8px #00ffcc' }}>SCORE {s.score}</span>
         <span style={{ color: '#cc00ff', fontFamily: "'Courier New', monospace", fontSize: 15, textShadow: '0 0 8px #cc00ff' }}>LV {s.level}</span>
         <span style={{ color: '#ff2d78', fontFamily: "'Courier New', monospace", fontSize: 18, textShadow: '0 0 10px #ff2d78', letterSpacing: 3 }}>{hearts.join(' ')}</span>
       </div>
 
-      {/* canvas */}
       <div style={{ position: 'relative', zIndex: 10, cursor: 'none' }}>
         <canvas
           ref={canvasRef}
@@ -470,19 +460,13 @@ export default function BreakoutGame() {
         />
       </div>
 
-      {/* overlays */}
-      {s.status === 'gameover' && (
-        <div style={overlayStyle}>
-          <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <div style={{ color: '#ff2d78', fontFamily: "'Courier New', monospace", fontSize: 36, fontWeight: 'bold', textShadow: '0 0 20px #ff2d78', letterSpacing: 4 }}>GAME OVER</div>
-            <div style={{ color: '#ffb852', fontFamily: "'Courier New', monospace", fontSize: 18 }}>SCORE: {s.score}</div>
-            <div style={{ color: '#00ffcc', fontFamily: "'Courier New', monospace", fontSize: 15 }}>BEST: {getBest()}</div>
-            <button style={neonBtn('#00ffcc')} onClick={startGame}>PLAY AGAIN</button>
-            <Link to="/" style={neonBtn('#cc00ff')}>HOME</Link>
-          </div>
-        </div>
-      )}
-
+      <Leaderboard
+        apiUrl={`${process.env.REACT_APP_SERVER_URL}/leaderboard/breakout`}
+        score={ui.score}
+        sessionToken={sessionTokenRef.current}
+        onPlayAgain={startGame}
+        visible={lbVisible}
+      />
     </div>
   );
 }

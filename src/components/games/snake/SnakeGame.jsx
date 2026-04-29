@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import MeshBackground from '../../ui/MeshBackground';
 import WaveAnimation from '../../ui/WaveAnimation';
+import Leaderboard from '../../ui/Leaderboard'; // Importado
 import isMobile from '../../../utils/isMobile';
 
 const COLS = 21;
@@ -46,7 +47,6 @@ function buildState(level = 1, score = 0) {
 
 function lp(a, b, t) { return a + (b - a) * Math.min(1, Math.max(0, t)); }
 
-// Manual rounded-rect fill for broad browser compat
 function fillRRect(ctx, x, y, w, h, r) {
   r = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
@@ -64,19 +64,51 @@ export default function SnakeGame() {
   const stateRef = useRef(null);
   const animRef = useRef(null);
   const lastTRef = useRef(0);
+  const lbVisibleRef = useRef(false); // Ref para controle de input
+  const sessionTokenRef = useRef(null); // Ref para token de sessão
+
   const [ui, setUi] = useState({ score: 0, level: 1, best: getBest(), status: 'playing' });
+  const [lbVisible, setLbVisible] = useState(false); // Estado visual do Leaderboard
 
   const CELL = isMobile ? Math.floor(Math.min(window.innerWidth * 0.95, 400) / COLS) : 24;
   const CW = CELL * COLS;
   const CH = CELL * ROWS;
 
+  // Requisição de sessão (igual ao Pacman)
+  const requestSession = useCallback(async () => {
+    try {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/leaderboard/snake/session`, {
+        method: 'POST',
+      });
+      const json = await res.json();
+      sessionTokenRef.current = json.sessionToken || null;
+    } catch {
+      sessionTokenRef.current = null;
+    }
+  }, []);
+
   const restart = useCallback(() => {
     const s = buildState(1, 0);
     stateRef.current = s;
     setUi({ score: 0, level: 1, best: s.best, status: 'playing' });
-  }, []);
+    setLbVisible(false);
+    lbVisibleRef.current = false;
+    requestSession();
+  }, [requestSession]);
 
   useEffect(() => { restart(); }, [restart]);
+
+  // Mostrar leaderboard no Game Over
+  useEffect(() => {
+    if (ui.status === 'dead') {
+      lbVisibleRef.current = true;
+      setLbVisible(true);
+    }
+  }, [ui.status]);
+
+  const handlePlayAgain = () => {
+    restart();
+  };
 
   // ── Keyboard ──────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -88,11 +120,13 @@ export default function SnakeGame() {
     const onKey = (e) => {
       const st = stateRef.current;
       if (!st) return;
-      if (st.status === 'dead') { if (e.key === 'Enter' || e.key === ' ') restart(); return; }
+      if (st.status === 'dead') {
+        if (!lbVisibleRef.current && (e.key === 'Enter' || e.key === ' ')) restart();
+        return;
+      }
       const nd = DIR[e.key];
       if (!nd) return;
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
-      // Queue if not a 180-degree reversal
       if (!(nd.dx === -st.dir.dx && nd.dy === -st.dir.dy)) st.nextDir = nd;
     };
     window.addEventListener('keydown', onKey);
@@ -106,7 +140,7 @@ export default function SnakeGame() {
     const onEnd = (e) => {
       const st = stateRef.current;
       if (!st) return;
-      if (st.status === 'dead') { restart(); return; }
+      if (st.status === 'dead') { if (!lbVisibleRef.current) restart(); return; }
       const dx = e.changedTouches[0].clientX - tx;
       const dy = e.changedTouches[0].clientY - ty;
       if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
@@ -135,7 +169,6 @@ export default function SnakeGame() {
       ctx.fillStyle = '#04000e';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Subtle grid
       ctx.strokeStyle = 'rgba(0,80,160,0.10)';
       ctx.lineWidth = 0.5;
       for (let x = 0; x <= COLS; x++) {
@@ -145,7 +178,6 @@ export default function SnakeGame() {
         ctx.beginPath(); ctx.moveTo(0, y * C); ctx.lineTo(COLS * C, y * C); ctx.stroke();
       }
 
-      // Food — pulsing pink orb with cross
       const pulse = 0.72 + 0.28 * Math.sin(ts * 0.006);
       const fcx = s.food.x * C + C / 2, fcy = s.food.y * C + C / 2;
       ctx.globalAlpha = pulse;
@@ -157,7 +189,6 @@ export default function SnakeGame() {
       ctx.beginPath(); ctx.moveTo(fcx - fh, fcy - fh); ctx.lineTo(fcx + fh, fcy + fh); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(fcx + fh, fcy - fh); ctx.lineTo(fcx - fh, fcy + fh); ctx.stroke();
 
-      // Snake — draw tail-to-head so head is always on top
       const t = Math.min(1, s.moveAccum / s.moveInterval);
       const n = s.snake.length;
       for (let i = n - 1; i >= 0; i--) {
@@ -167,7 +198,6 @@ export default function SnakeGame() {
         const isHead = i === 0;
         const ratio = n > 1 ? i / (n - 1) : 0;
 
-        // Color gradient: head #00ffcc → tail #6600ff
         const cr = Math.round(102 * ratio);
         const cg = Math.round(255 * (1 - ratio));
         const cb = Math.round(204 + 51 * ratio);
@@ -182,7 +212,6 @@ export default function SnakeGame() {
         ctx.shadowBlur = isHead ? 14 : Math.max(2, (1 - ratio) * 8);
         fillRRect(ctx, rx - sz / 2, ry - sz / 2, sz, sz, rad);
 
-        // Eyes on head
         if (isHead) {
           ctx.shadowBlur = 0;
           ctx.fillStyle = '#001a10';
@@ -199,7 +228,6 @@ export default function SnakeGame() {
         ctx.shadowBlur = 0;
       }
 
-      // Level-up flash
       if (s.lvlFlash > 0) {
         ctx.globalAlpha = Math.min(1, s.lvlFlash * 2);
         ctx.fillStyle = '#cc00ff'; ctx.shadowColor = '#cc00ff'; ctx.shadowBlur = 28;
@@ -208,37 +236,14 @@ export default function SnakeGame() {
         ctx.fillText(`LEVEL ${s.level}!`, canvas.width / 2, canvas.height / 2);
         ctx.globalAlpha = 1; ctx.shadowBlur = 0;
       }
-
-      // Game-over overlay
-      if (s.status === 'dead') {
-        ctx.fillStyle = 'rgba(0,0,12,0.72)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.textAlign = 'center';
-        ctx.fillStyle = '#ff2d78'; ctx.shadowColor = '#ff2d78'; ctx.shadowBlur = 22;
-        ctx.font = `bold ${Math.round(C * 1.3)}px Orbitron, sans-serif`;
-        ctx.fillText('GAME OVER', canvas.width / 2, canvas.height / 2 - C * 0.9);
-        ctx.shadowBlur = 0;
-        ctx.fillStyle = 'rgba(255,255,255,0.55)';
-        ctx.font = `${Math.round(C * 0.72)}px Orbitron, sans-serif`;
-        ctx.fillText(`SCORE  ${s.score}`, canvas.width / 2, canvas.height / 2 + C * 0.2);
-        if (s.score > 0 && s.score >= s.best) {
-          ctx.fillStyle = '#ffee00'; ctx.shadowColor = '#ffcc00'; ctx.shadowBlur = 10;
-          ctx.font = `${Math.round(C * 0.62)}px Orbitron, sans-serif`;
-          ctx.fillText('✦ NEW BEST ✦', canvas.width / 2, canvas.height / 2 + C * 0.95);
-          ctx.shadowBlur = 0;
-        }
-        ctx.fillStyle = 'rgba(255,255,255,0.35)';
-        ctx.font = `${Math.round(C * 0.56)}px Orbitron, sans-serif`;
-        ctx.fillText('ENTER / TAP TO RESTART', canvas.width / 2, canvas.height / 2 + C * 1.65);
-      }
     }
 
     function killSnake(s, ts) {
       saveBest(s.score);
       s.best = getBest();
       s.status = 'dead';
-      s.moveAccum = s.moveInterval; // freeze interpolation at t=1
-      setUi(u => ({ ...u, status: 'dead' }));
+      s.moveAccum = s.moveInterval;
+      setUi(u => ({ ...u, status: 'dead', score: s.score }));
       draw(s, ts);
     }
 
@@ -255,7 +260,6 @@ export default function SnakeGame() {
       s.moveAccum += dt;
 
       if (s.moveAccum >= s.moveInterval) {
-        // Apply queued direction (block 180° reversal)
         const nd = s.nextDir;
         if (!(nd.dx === -s.dir.dx && nd.dy === -s.dir.dy)) s.dir = { ...nd };
 
@@ -263,30 +267,22 @@ export default function SnakeGame() {
         const newX = head.x + s.dir.dx;
         const newY = head.y + s.dir.dy;
 
-        // Wall collision
         if (newX < 0 || newX >= COLS || newY < 0 || newY >= ROWS) { killSnake(s, ts); animRef.current = requestAnimationFrame(tick); return; }
-
-        // Self collision — exclude tail (it moves away this step)
         if (s.snake.slice(1, -1).some(seg => seg.x === newX && seg.y === newY)) { killSnake(s, ts); animRef.current = requestAnimationFrame(tick); return; }
 
         const atFood = newX === s.food.x && newY === s.food.y;
-
-        // Save positions for interpolation before moving
         const old = s.snake.map(seg => ({ x: seg.x, y: seg.y }));
         s.snake.forEach(seg => { seg.prevX = seg.x; seg.prevY = seg.y; });
 
-        // Move head
         s.snake[0].x = newX;
         s.snake[0].y = newY;
 
-        // Shift body: each segment takes the previous position of the one in front
         for (let i = 1; i < s.snake.length; i++) {
           s.snake[i].x = old[i - 1].x;
           s.snake[i].y = old[i - 1].y;
         }
 
         if (atFood) {
-          // Grow: append new tail segment at the old tail's original position
           const ot = old[old.length - 1];
           s.snake.push({ x: ot.x, y: ot.y, prevX: ot.x, prevY: ot.y });
           s.score += 10 * s.level;
@@ -297,13 +293,9 @@ export default function SnakeGame() {
             s.level++;
             s.moveInterval = getMoveInterval(s.level);
             s.lvlFlash = 1.4;
-            setUi(u => ({ ...u, level: s.level, score: s.score }));
-          } else {
-            setUi(u => ({ ...u, score: s.score }));
           }
+          setUi(u => ({ ...u, level: s.level, score: s.score }));
         }
-        // No pop needed — the loop already shifted all segments in-place.
-        // Popping here would shrink the snake by 1 every tick.
 
         s.moveAccum = 0;
       }
@@ -346,7 +338,6 @@ export default function SnakeGame() {
       >← BACK</Link>
 
       <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-        {/* HUD */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           width: CW, fontFamily: "'Orbitron', sans-serif", fontSize: isMobile ? 11 : 13,
@@ -363,7 +354,6 @@ export default function SnakeGame() {
           </div>
         </div>
 
-        {/* Canvas */}
         <div style={{
           border: '2px solid rgba(0,255,180,0.30)', borderRadius: 4,
           boxShadow: '0 0 32px rgba(0,255,160,0.16), inset 0 0 24px rgba(0,0,40,0.85)',
@@ -379,6 +369,14 @@ export default function SnakeGame() {
           {isMobile ? 'SWIPE TO MOVE' : 'WASD / ARROW KEYS'}
         </div>
       </div>
+
+      <Leaderboard
+        apiUrl={`${process.env.REACT_APP_SERVER_URL}/leaderboard/snake`}
+        score={ui.score}
+        sessionToken={sessionTokenRef.current}
+        onPlayAgain={handlePlayAgain}
+        visible={lbVisible}
+      />
     </div>
   );
 }

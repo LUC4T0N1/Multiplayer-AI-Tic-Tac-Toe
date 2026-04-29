@@ -1,5 +1,6 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Leaderboard from '../../ui/Leaderboard'; // Importado
 
 const COLS = 10;
 const ROWS = 20;
@@ -14,17 +15,16 @@ const COLORS = {
 };
 
 const PIECES = {
-  I: { shape: [[0,0,0,0],[1,1,1,1],[0,0,0,0],[0,0,0,0]], color: 'I' },
-  O: { shape: [[1,1],[1,1]], color: 'O' },
-  T: { shape: [[0,1,0],[1,1,1],[0,0,0]], color: 'T' },
-  S: { shape: [[0,1,1],[1,1,0],[0,0,0]], color: 'S' },
-  Z: { shape: [[1,1,0],[0,1,1],[0,0,0]], color: 'Z' },
-  J: { shape: [[1,0,0],[1,1,1],[0,0,0]], color: 'J' },
-  L: { shape: [[0,0,1],[1,1,1],[0,0,0]], color: 'L' },
+  I: { shape: [[0, 0, 0, 0], [1, 1, 1, 1], [0, 0, 0, 0], [0, 0, 0, 0]], color: 'I' },
+  O: { shape: [[1, 1], [1, 1]], color: 'O' },
+  T: { shape: [[0, 1, 0], [1, 1, 1], [0, 0, 0]], color: 'T' },
+  S: { shape: [[0, 1, 1], [1, 1, 0], [0, 0, 0]], color: 'S' },
+  Z: { shape: [[1, 1, 0], [0, 1, 1], [0, 0, 0]], color: 'Z' },
+  J: { shape: [[1, 0, 0], [1, 1, 1], [0, 0, 0]], color: 'J' },
+  L: { shape: [[0, 0, 1], [1, 1, 1], [0, 0, 0]], color: 'L' },
 };
 
 const PIECE_KEYS = Object.keys(PIECES);
-
 const SCORE_TABLE = [0, 100, 300, 500, 800];
 const LEVEL_SPEED = [800, 720, 630, 550, 470, 380, 300, 220, 130, 100, 80];
 
@@ -90,11 +90,32 @@ export default function TetrisGame() {
   const stateRef = useRef(null);
   const animRef = useRef(null);
   const lastDropRef = useRef(0);
+  const sessionTokenRef = useRef(null);
+  const lbVisibleRef = useRef(false);
+
+  const [score, setScore] = useState(0);
+  const [lbVisible, setLbVisible] = useState(false);
+
+  const requestSession = useCallback(async () => {
+    try {
+      const res = await fetch(`${process.env.REACT_APP_SERVER_URL}/leaderboard/tetris/session`, {
+        method: 'POST',
+      });
+      const json = await res.json();
+      sessionTokenRef.current = json.sessionToken || null;
+    } catch {
+      sessionTokenRef.current = null;
+    }
+  }, []);
 
   const initState = useCallback(() => {
     const bag = newBag();
     const nextBag = newBag();
     const currentKey = bag.pop();
+    setScore(0);
+    setLbVisible(false);
+    lbVisibleRef.current = false;
+    requestSession();
     return {
       board: emptyBoard(),
       current: spawnPiece(currentKey),
@@ -106,10 +127,10 @@ export default function TetrisGame() {
       score: 0,
       lines: 0,
       level: 0,
-      status: 'playing', // playing | paused | over
+      status: 'playing',
       softDrop: false,
     };
-  }, []);
+  }, [requestSession]);
 
   const drawBlock = useCallback((ctx, x, y, color, cs, alpha = 1, ghost = false) => {
     ctx.save();
@@ -160,7 +181,6 @@ export default function TetrisGame() {
 
     ctx.clearRect(0, 0, W, H);
 
-    // Background
     const bg = ctx.createLinearGradient(0, 0, 0, H);
     bg.addColorStop(0, '#040010');
     bg.addColorStop(0.3, '#0e0030');
@@ -169,7 +189,6 @@ export default function TetrisGame() {
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
-    // Board background
     ctx.save();
     ctx.fillStyle = 'rgba(4,0,18,0.85)';
     ctx.fillRect(bx, by, boardW, cs * ROWS);
@@ -180,7 +199,6 @@ export default function TetrisGame() {
     ctx.strokeRect(bx, by, boardW, cs * ROWS);
     ctx.restore();
 
-    // Grid lines
     ctx.save();
     ctx.globalAlpha = 0.06;
     ctx.strokeStyle = '#00e5ff';
@@ -196,7 +214,6 @@ export default function TetrisGame() {
     const s = stateRef.current;
     if (!s) return;
 
-    // Placed blocks
     for (let r = 0; r < ROWS; r++)
       for (let c = 0; c < COLS; c++)
         if (s.board[r][c]) drawBlock(ctx, bx / cs + c, by / cs + r, COLORS[s.board[r][c]], cs);
@@ -207,7 +224,6 @@ export default function TetrisGame() {
     ctx.rect(0, 0, boardW, cs * ROWS);
     ctx.clip();
 
-    // Ghost
     if (s.status === 'playing' && s.current) {
       const gy = ghostY(s.board, s.current.shape, s.current.x, s.current.y);
       if (gy !== s.current.y) {
@@ -218,17 +234,14 @@ export default function TetrisGame() {
       }
     }
 
-    // Current piece
     if (s.current && s.status !== 'over') {
       for (let r = 0; r < s.current.shape.length; r++)
         for (let c = 0; c < s.current.shape[r].length; c++)
           if (s.current.shape[r][c])
             drawBlock(ctx, s.current.x + c, s.current.y + r, COLORS[s.current.color], cs);
     }
-
     ctx.restore();
 
-    // ---- Left panel (HOLD) ----
     const lx = (W - totalW) / 2;
     const ly = by;
     const miniCs = cs * 0.8;
@@ -257,7 +270,6 @@ export default function TetrisGame() {
       ctx.restore();
     }
 
-    // ---- Right panel (NEXT + SCORE) ----
     const rx = bx + boardW + cs * 0.4;
     ctx.save();
     ctx.fillStyle = 'rgba(4,0,18,0.72)';
@@ -283,7 +295,6 @@ export default function TetrisGame() {
       ctx.restore();
     }
 
-    // Score panel
     const scoreY = ly + cs * 7;
     const scoreH = cs * 9;
     ctx.save();
@@ -316,40 +327,6 @@ export default function TetrisGame() {
       ctx.restore();
     });
 
-    // Controls hint
-    ctx.save();
-    ctx.textAlign = 'center';
-    ctx.font = `${cs * 0.28}px Orbitron, sans-serif`;
-    ctx.fillStyle = 'rgba(100,100,160,0.7)';
-    ctx.fillText('C / SHIFT = HOLD', rx + (panelW - cs * 0.4) / 2, scoreY + scoreH - cs * 0.5);
-    ctx.restore();
-
-    // Scanlines
-    ctx.save();
-    ctx.globalAlpha = 0.04;
-    for (let y = 0; y < H; y += 4) { ctx.fillStyle = '#000'; ctx.fillRect(0, y, W, 2); }
-    ctx.restore();
-
-    // GAME OVER overlay
-    if (s.status === 'over') {
-      ctx.save();
-      ctx.fillStyle = 'rgba(4,0,18,0.82)';
-      ctx.fillRect(bx - 2, by, boardW + 4, cs * ROWS);
-      ctx.textAlign = 'center';
-      ctx.font = `bold ${cs * 0.72}px Orbitron, sans-serif`;
-      ctx.fillStyle = '#ff2d78';
-      ctx.shadowColor = '#ff2d78';
-      ctx.shadowBlur = 24;
-      ctx.fillText('GAME OVER', bx + boardW / 2, by + cs * ROWS / 2 - cs * 0.6);
-      ctx.font = `${cs * 0.38}px Orbitron, sans-serif`;
-      ctx.fillStyle = '#00e5ff';
-      ctx.shadowColor = '#00e5ff';
-      ctx.shadowBlur = 10;
-      ctx.fillText('PRESS R TO RESTART', bx + boardW / 2, by + cs * ROWS / 2 + cs * 0.6);
-      ctx.restore();
-    }
-
-    // PAUSED overlay
     if (s.status === 'paused') {
       ctx.save();
       ctx.fillStyle = 'rgba(4,0,18,0.75)';
@@ -381,7 +358,7 @@ export default function TetrisGame() {
       s.bag = bag; s.nextBag = nextBag; s.next = afterNext;
     }
     if (!fits(s.board, newCurrent.shape, newCurrent.x, newCurrent.y)) {
-      s.status = 'over'; return;
+      s.status = 'over'; setLbVisible(true); lbVisibleRef.current = true; return;
     }
     s.hold = currentKey;
     s.current = newCurrent;
@@ -405,9 +382,13 @@ export default function TetrisGame() {
     const newLevel = Math.min(10, Math.floor(newLines / 10));
     const newCurrent = spawnPiece(s.next);
 
+    setScore(newScore);
+
     if (!fits(clearedBoard, newCurrent.shape, newCurrent.x, newCurrent.y)) {
       s.board = clearedBoard;
       s.status = 'over';
+      setLbVisible(true);
+      lbVisibleRef.current = true;
       return;
     }
 
@@ -444,6 +425,7 @@ export default function TetrisGame() {
     window.addEventListener('resize', onResize);
 
     const onKey = (e) => {
+      if (lbVisibleRef.current) return;
       const s = stateRef.current;
       if (!s) return;
 
@@ -537,11 +519,20 @@ export default function TetrisGame() {
           boxShadow: '0 0 10px rgba(0,229,255,0.2)', backdropFilter: 'blur(10px)',
           transition: 'all 0.15s',
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,229,255,0.12)'; e.currentTarget.style.boxShadow = '0 0 20px rgba(0,229,255,0.5)'; }}
-        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(4,0,18,0.75)'; e.currentTarget.style.boxShadow = '0 0 10px rgba(0,229,255,0.2)'; }}
       >
         ← HOME
       </button>
+
+      <Leaderboard
+        apiUrl={`${process.env.REACT_APP_SERVER_URL}/leaderboard/tetris`}
+        score={score}
+        sessionToken={sessionTokenRef.current}
+        onPlayAgain={() => {
+          stateRef.current = initState();
+          lastDropRef.current = performance.now();
+        }}
+        visible={lbVisible}
+      />
     </div>
   );
 }
