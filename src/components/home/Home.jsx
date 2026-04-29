@@ -488,6 +488,9 @@ function Home({ socket }) {
               <NeonButton color="#ffb852" size="lg" to="/breakout" delay={0.40}>
                 BREAKOUT
               </NeonButton>
+              <NeonButton color="#ff2d78" size="lg" to="/tetris" delay={0.50}>
+                TETRIS
+              </NeonButton>
             </div>
           )}
 

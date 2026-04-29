@@ -11,6 +11,7 @@ const Queue = lazy(() => import("./components/games/multiplayer/online/room-crea
 const PacmanGame = lazy(() => import("./components/games/pacman/PacmanGame"));
 const SnakeGame  = lazy(() => import("./components/games/snake/SnakeGame"));
 const BreakoutGame = lazy(() => import("./components/games/breakout/BreakoutGame"));
+const TetrisGame = lazy(() => import("./components/games/tetris/TetrisGame"));
 
 const LoadingFallback = () => (
   <div style={{ width: '100vw', height: '100vh', background: '#050010' }} />
@@ -32,6 +33,7 @@ function App({ socket }) {
             <Route path="/pacman" element={<PacmanGame />} />
             <Route path="/snake"  element={<SnakeGame />} />
             <Route path="/breakout" element={<BreakoutGame />} />
+            <Route path="/tetris" element={<TetrisGame />} />
             <Route path='*' element={<Error />} />
           </Routes>
         </Suspense>

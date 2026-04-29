@@ -26,7 +26,7 @@ function getMoveInterval(level) {
 function buildState(level = 1, score = 0) {
   const sx = Math.floor(COLS / 2), sy = Math.floor(ROWS / 2);
   const snake = [
-    { x: sx,     y: sy, prevX: sx,     prevY: sy },
+    { x: sx, y: sy, prevX: sx, prevY: sy },
     { x: sx - 1, y: sy, prevX: sx - 1, prevY: sy },
     { x: sx - 2, y: sy, prevX: sx - 2, prevY: sy },
   ];
@@ -51,19 +51,19 @@ function fillRRect(ctx, x, y, w, h, r) {
   r = Math.min(r, w / 2, h / 2);
   ctx.beginPath();
   ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);   ctx.arcTo(x + w, y,     x + w, y + r,     r);
+  ctx.lineTo(x + w - r, y); ctx.arcTo(x + w, y, x + w, y + r, r);
   ctx.lineTo(x + w, y + h - r); ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
-  ctx.lineTo(x + r, y + h);   ctx.arcTo(x,     y + h, x,     y + h - r, r);
-  ctx.lineTo(x, y + r);       ctx.arcTo(x,     y,     x + r, y,         r);
+  ctx.lineTo(x + r, y + h); ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r); ctx.arcTo(x, y, x + r, y, r);
   ctx.closePath();
   ctx.fill();
 }
 
 export default function SnakeGame() {
   const canvasRef = useRef(null);
-  const stateRef  = useRef(null);
-  const animRef   = useRef(null);
-  const lastTRef  = useRef(0);
+  const stateRef = useRef(null);
+  const animRef = useRef(null);
+  const lastTRef = useRef(0);
   const [ui, setUi] = useState({ score: 0, level: 1, best: getBest(), status: 'playing' });
 
   const CELL = isMobile ? Math.floor(Math.min(window.innerWidth * 0.95, 400) / COLS) : 24;
@@ -81,9 +81,9 @@ export default function SnakeGame() {
   // ── Keyboard ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const DIR = {
-      ArrowUp: {dx:0,dy:-1}, ArrowDown: {dx:0,dy:1},
-      ArrowLeft: {dx:-1,dy:0}, ArrowRight: {dx:1,dy:0},
-      w: {dx:0,dy:-1}, s: {dx:0,dy:1}, a: {dx:-1,dy:0}, d: {dx:1,dy:0},
+      ArrowUp: { dx: 0, dy: -1 }, ArrowDown: { dx: 0, dy: 1 },
+      ArrowLeft: { dx: -1, dy: 0 }, ArrowRight: { dx: 1, dy: 0 },
+      w: { dx: 0, dy: -1 }, s: { dx: 0, dy: 1 }, a: { dx: -1, dy: 0 }, d: { dx: 1, dy: 0 },
     };
     const onKey = (e) => {
       const st = stateRef.current;
@@ -91,7 +91,7 @@ export default function SnakeGame() {
       if (st.status === 'dead') { if (e.key === 'Enter' || e.key === ' ') restart(); return; }
       const nd = DIR[e.key];
       if (!nd) return;
-      if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) e.preventDefault();
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault();
       // Queue if not a 180-degree reversal
       if (!(nd.dx === -st.dir.dx && nd.dy === -st.dir.dy)) st.nextDir = nd;
     };
@@ -103,7 +103,7 @@ export default function SnakeGame() {
   useEffect(() => {
     let tx = 0, ty = 0;
     const onStart = (e) => { tx = e.touches[0].clientX; ty = e.touches[0].clientY; };
-    const onEnd   = (e) => {
+    const onEnd = (e) => {
       const st = stateRef.current;
       if (!st) return;
       if (st.status === 'dead') { restart(); return; }
@@ -111,15 +111,15 @@ export default function SnakeGame() {
       const dy = e.changedTouches[0].clientY - ty;
       if (Math.abs(dx) < 12 && Math.abs(dy) < 12) return;
       const nd = Math.abs(dx) > Math.abs(dy)
-        ? (dx > 0 ? {dx:1,dy:0} : {dx:-1,dy:0})
-        : (dy > 0 ? {dx:0,dy:1} : {dx:0,dy:-1});
+        ? (dx > 0 ? { dx: 1, dy: 0 } : { dx: -1, dy: 0 })
+        : (dy > 0 ? { dx: 0, dy: 1 } : { dx: 0, dy: -1 });
       if (!(nd.dx === -st.dir.dx && nd.dy === -st.dir.dy)) st.nextDir = nd;
     };
     window.addEventListener('touchstart', onStart, { passive: true });
-    window.addEventListener('touchend',   onEnd,   { passive: true });
+    window.addEventListener('touchend', onEnd, { passive: true });
     return () => {
       window.removeEventListener('touchstart', onStart);
-      window.removeEventListener('touchend',   onEnd);
+      window.removeEventListener('touchend', onEnd);
     };
   }, [restart]);
 
@@ -154,8 +154,8 @@ export default function SnakeGame() {
       ctx.globalAlpha = 1; ctx.shadowBlur = 0;
       ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.2;
       const fh = C * 0.14;
-      ctx.beginPath(); ctx.moveTo(fcx-fh,fcy-fh); ctx.lineTo(fcx+fh,fcy+fh); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(fcx+fh,fcy-fh); ctx.lineTo(fcx-fh,fcy+fh); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(fcx - fh, fcy - fh); ctx.lineTo(fcx + fh, fcy + fh); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(fcx + fh, fcy - fh); ctx.lineTo(fcx - fh, fcy + fh); ctx.stroke();
 
       // Snake — draw tail-to-head so head is always on top
       const t = Math.min(1, s.moveAccum / s.moveInterval);
@@ -174,12 +174,12 @@ export default function SnakeGame() {
         const col = `rgb(${cr},${cg},${cb})`;
 
         const pad = isHead ? 1.5 : 2.5;
-        const sz  = C - pad * 2;
+        const sz = C - pad * 2;
         const rad = isHead ? sz * 0.32 : sz * 0.22;
 
-        ctx.fillStyle   = col;
+        ctx.fillStyle = col;
         ctx.shadowColor = isHead ? '#00ffcc' : col;
-        ctx.shadowBlur  = isHead ? 14 : Math.max(2, (1 - ratio) * 8);
+        ctx.shadowBlur = isHead ? 14 : Math.max(2, (1 - ratio) * 8);
         fillRRect(ctx, rx - sz / 2, ry - sz / 2, sz, sz, rad);
 
         // Eyes on head
@@ -190,10 +190,10 @@ export default function SnakeGame() {
           const eyeR = sz * 0.13;
           const fwd = sz * 0.16, side = sz * 0.20;
           ctx.beginPath();
-          ctx.arc(rx + d.dx*fwd - d.dy*side, ry + d.dy*fwd + d.dx*side, eyeR, 0, Math.PI*2);
+          ctx.arc(rx + d.dx * fwd - d.dy * side, ry + d.dy * fwd + d.dx * side, eyeR, 0, Math.PI * 2);
           ctx.fill();
           ctx.beginPath();
-          ctx.arc(rx + d.dx*fwd + d.dy*side, ry + d.dy*fwd - d.dx*side, eyeR, 0, Math.PI*2);
+          ctx.arc(rx + d.dx * fwd + d.dy * side, ry + d.dy * fwd - d.dx * side, eyeR, 0, Math.PI * 2);
           ctx.fill();
         }
         ctx.shadowBlur = 0;
@@ -202,7 +202,7 @@ export default function SnakeGame() {
       // Level-up flash
       if (s.lvlFlash > 0) {
         ctx.globalAlpha = Math.min(1, s.lvlFlash * 2);
-        ctx.fillStyle   = '#cc00ff'; ctx.shadowColor = '#cc00ff'; ctx.shadowBlur = 28;
+        ctx.fillStyle = '#cc00ff'; ctx.shadowColor = '#cc00ff'; ctx.shadowBlur = 28;
         ctx.font = `bold ${Math.round(C * 1.2)}px Orbitron, sans-serif`;
         ctx.textAlign = 'center';
         ctx.fillText(`LEVEL ${s.level}!`, canvas.width / 2, canvas.height / 2);

@@ -2,7 +2,7 @@ import { MeshGradient } from "@paper-design/shaders-react";
 import { useState, useEffect } from "react";
 import isMobile from "../../utils/isMobile";
 
-const COLORS = ["#12b9da8e", "#e014a07e", "#b014e07e"];
+const COLORS = ["#e0149f11", "#221e2217"];
 
 function MeshBackground({ zIndex = 0, style }) {
   const [dims, setDims] = useState({ width: window.innerWidth, height: window.innerHeight });
