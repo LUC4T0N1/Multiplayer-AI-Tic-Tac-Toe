@@ -1,5 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
+import HomeButton from '../../ui/HomeButton';
 
 const COLS = 10;
 const ROWS = 20;
@@ -249,6 +250,18 @@ export default function OnlineTetrisGame({ socket, room, opponentName }) {
     ctx.fillText('YOU', myBoardX + boardW / 2, sy - cs * 0.4);
     ctx.restore();
 
+    if (s.status === 'dead' && !resultRef.current) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.fillRect(myBoardX, sy, boardW, boardH);
+      ctx.fillStyle = '#ff2d78';
+      ctx.textAlign = 'center';
+      ctx.font = `bold ${Math.max(16, cs * 1.2)}px Orbitron, sans-serif`;
+      ctx.fillText('DIED', myBoardX + boardW / 2, sy + boardH / 2 - 10);
+      ctx.fillText('SPECTATING', myBoardX + boardW / 2, sy + boardH / 2 + 20);
+      ctx.restore();
+    }
+
     // ── Hold panel ───────────────────────────────────────────────────────────
     const holdPW = holdW - cs * 0.3;
     ctx.save();
@@ -406,6 +419,18 @@ export default function OnlineTetrisGame({ socket, room, opponentName }) {
       });
     }
 
+    if (opp && opp.status === 'dead' && !resultRef.current) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.fillRect(oppBoardX, sy, boardW, boardH);
+      ctx.fillStyle = '#ff2d78';
+      ctx.textAlign = 'center';
+      ctx.font = `bold ${Math.max(16, cs * 1.2)}px Orbitron, sans-serif`;
+      ctx.fillText('OPPONENT', oppBoardX + boardW / 2, sy + boardH / 2 - 10);
+      ctx.fillText('DIED', oppBoardX + boardW / 2, sy + boardH / 2 + 20);
+      ctx.restore();
+    }
+
     // Opp name label
     ctx.save();
     ctx.font = `bold ${cs * 0.42}px Orbitron, sans-serif`;
@@ -418,6 +443,23 @@ export default function OnlineTetrisGame({ socket, room, opponentName }) {
   }, [drawBlock, drawMini, opponentName]);
 
   // ── Game logic ────────────────────────────────────────────────────────────
+  const checkGameOver = useCallback(() => {
+    const s = myStateRef.current;
+    const opp = oppStateRef.current;
+    if (s && opp && s.status === 'dead' && opp.status === 'dead') {
+      if (resultRef.current) return;
+      if (s.score > opp.score) {
+        resultRef.current = 'win';
+        setResult('win');
+      } else if (s.score < opp.score) {
+        resultRef.current = 'lose';
+        setResult('lose');
+      } else {
+        resultRef.current = 'tie';
+        setResult('tie');
+      }
+    }
+  }, []);
 
   const lockAndNext = useCallback(() => {
     const s = myStateRef.current;
@@ -440,10 +482,9 @@ export default function OnlineTetrisGame({ socket, room, opponentName }) {
     if (!fits(clearedBoard, newCurrent.shape, newCurrent.x, newCurrent.y)) {
       s.board = clearedBoard;
       s.score = newScore; s.lines = newLines; s.level = newLevel;
-      s.status = 'over';
-      socket.emit('tetris-over', { room });
-      resultRef.current = 'lose';
-      setResult('lose');
+      s.status = 'dead';
+      socket.emit('tetris-died', { room, score: s.score });
+      checkGameOver();
       return;
     }
 
@@ -455,7 +496,7 @@ export default function OnlineTetrisGame({ socket, room, opponentName }) {
 
     // Broadcast new piece immediately
     socket.emit('tetris-piece', { room, x: newCurrent.x, y: newCurrent.y, shape: newCurrent.shape, color: newCurrent.color });
-  }, [socket, room]);
+  }, [socket, room, checkGameOver]);
 
   const doHold = useCallback(() => {
     const s = myStateRef.current;
@@ -474,16 +515,15 @@ export default function OnlineTetrisGame({ socket, room, opponentName }) {
       s.bag = bag; s.nextBag = nextBag; s.next = afterNext;
     }
     if (!fits(s.board, newCurrent.shape, newCurrent.x, newCurrent.y)) {
-      s.status = 'over';
-      socket.emit('tetris-over', { room });
-      resultRef.current = 'lose';
-      setResult('lose');
+      s.status = 'dead';
+      socket.emit('tetris-died', { room, score: s.score });
+      checkGameOver();
       return;
     }
     s.hold = currentKey;
     s.current = newCurrent;
     s.holdUsed = true;
-  }, [socket, room]);
+  }, [socket, room, checkGameOver]);
 
   const doRestart = useCallback(() => {
     myStateRef.current  = makeMyState();
@@ -528,13 +568,17 @@ export default function OnlineTetrisGame({ socket, room, opponentName }) {
       const o = oppStateRef.current;
       if (o) o.falling = { x, y, shape, color };
     };
-    const onOver = () => {
-      if (resultRef.current) return;
-      resultRef.current = 'win';
-      setResult('win');
+    const onOppDied = ({ score }) => {
+      const opp = oppStateRef.current;
+      if (opp) {
+        opp.status = 'dead';
+        if (score !== undefined) opp.score = score;
+      }
+      checkGameOver();
     };
     const onOppLeft = () => {
       if (resultRef.current) return;
+      if (oppStateRef.current?.status === 'dead') return;
       resultRef.current = 'opp-left';
       setResult('opp-left');
     };
@@ -545,7 +589,7 @@ export default function OnlineTetrisGame({ socket, room, opponentName }) {
 
     socket.on('tetris-board',        onBoard);
     socket.on('tetris-piece',        onPiece);
-    socket.on('tetris-opp-over',     onOver);
+    socket.on('tetris-opp-died',     onOppDied);
     socket.on('tetris-opp-left',     onOppLeft);
     socket.on('tetris-restart-ready', onRestartReady);
 
@@ -625,19 +669,20 @@ export default function OnlineTetrisGame({ socket, room, opponentName }) {
       window.removeEventListener('resize', onResize);
       socket.off('tetris-board',         onBoard);
       socket.off('tetris-piece',         onPiece);
-      socket.off('tetris-opp-over',      onOver);
+      socket.off('tetris-opp-died',      onOppDied);
       socket.off('tetris-opp-left',      onOppLeft);
       socket.off('tetris-restart-ready', onRestartReady);
       socket.emit('tetris-leave', { room });
     };
   }, [socket, room, lockAndNext, doHold, doRestart, render]);
 
-  const resultColor = result === 'win' ? '#00e5ff' : result === 'opp-left' ? '#ffe066' : '#ff2d78';
-  const resultText  = result === 'win' ? 'YOU WIN!' : result === 'lose' ? 'YOU LOSE' : 'OPPONENT LEFT';
+  const resultColor = result === 'win' ? '#00e5ff' : result === 'tie' ? '#ffe066' : result === 'opp-left' ? '#ffe066' : '#ff2d78';
+  const resultText  = result === 'win' ? 'YOU WIN!' : result === 'lose' ? 'YOU LOSE' : result === 'tie' ? 'TIE!' : 'OPPONENT LEFT';
 
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', background: '#040010', position: 'relative' }}>
       <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />
+      <HomeButton />
 
       {result && (
         <div style={{
@@ -690,16 +735,9 @@ export default function OnlineTetrisGame({ socket, room, opponentName }) {
             )
           )}
 
-          <Link
-            to="/"
-            style={{
-              fontFamily: "'Orbitron', sans-serif", fontSize: 10,
-              color: 'rgba(255,255,255,0.32)', letterSpacing: '0.15em',
-              textDecoration: 'none', textTransform: 'uppercase',
-            }}
-            onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.7)'}
-            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.32)'}
-          >← BACK TO MENU</Link>
+          <div style={{ marginTop: 20 }}>
+            <HomeButton />
+          </div>
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import OnlinePacmanGame from './OnlinePacmanGame';
+import HomeButton from '../../ui/HomeButton';
 
 function PacmanFriendLobby({ socket }) {
   const [phase, setPhase]       = useState('form'); // 'form' | 'waiting' | 'game'
@@ -49,14 +50,7 @@ function PacmanFriendLobby({ socket }) {
         backgroundSize: '100% 4px',
       }} />
 
-      <Link to="/" style={{
-        position: 'absolute', top: 22, left: 24, zIndex: 20,
-        fontFamily: "'Orbitron', sans-serif", fontSize: 10, letterSpacing: '0.14em',
-        color: 'rgba(255,255,255,0.35)', textDecoration: 'none', textTransform: 'uppercase',
-      }}
-        onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.85)'}
-        onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
-      >← BACK</Link>
+      <HomeButton />
 
       <div style={{
         position: 'relative', zIndex: 10,

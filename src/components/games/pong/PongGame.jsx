@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import isMobile from '../../../utils/isMobile';
+import HomeButton from '../../ui/HomeButton';
 
 // ── Constants ─────────────────────────────────────────────────────────────
 const LW = 800, LH = 480;
@@ -505,16 +506,7 @@ function PongGame() {
         backgroundSize: '100% 4px',
       }} />
 
-      {/* Back */}
-      <Link to="/" style={{
-        position: 'absolute', top: 22, left: 24, zIndex: 20,
-        fontFamily: "'Orbitron', sans-serif", fontSize: 10, letterSpacing: '0.14em',
-        color: 'rgba(255,255,255,0.35)', textDecoration: 'none',
-        textTransform: 'uppercase', transition: 'color 0.15s',
-      }}
-        onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.85)'}
-        onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
-      >← BACK</Link>
+      <HomeButton />
 
       {/* Difficulty label */}
       <div style={{

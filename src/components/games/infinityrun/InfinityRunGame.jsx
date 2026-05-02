@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import Leaderboard from '../../ui/Leaderboard';
 import isMobile from '../../../utils/isMobile';
+import HomeButton from '../../ui/HomeButton';
 
 // ── Constants ─────────────────────────────────────────────────────────────
 const LW = 800, LH = 270;
@@ -103,7 +104,7 @@ function InfinityRunGame() {
   useEffect(() => {
     const onDown = (e) => {
       if (stateRef.current?.status === 'dead') return;
-      if ([' ', 'ArrowUp', 'w', 'W'].includes(e.key)) { e.preventDefault(); inputRef.current.jumpQ++; }
+      if ([' ', 'ArrowUp', 'w', 'W'].includes(e.key)) { e.preventDefault(); if (!e.repeat) inputRef.current.jumpQ++; }
       if (['ArrowDown', 's', 'S'].includes(e.key)) inputRef.current.duckHeld = true;
     };
     const onUp = (e) => {
@@ -181,26 +182,50 @@ function InfinityRunGame() {
       }
       ctx.restore();
 
-      // Mountain silhouettes
-      const peaks = [
-        [60,55],[160,85],[290,60],[420,90],[540,65],[670,80],[780,52],
+      // Mountain silhouettes — two smooth layers
+      const farPts = [
+        { x: -40, y: GROUND_Y }, { x: 30,  y: GROUND_Y - 48 }, { x: 115, y: GROUND_Y - 98 },
+        { x: 220, y: GROUND_Y - 70 }, { x: 320, y: GROUND_Y - 118 }, { x: 430, y: GROUND_Y - 82 },
+        { x: 530, y: GROUND_Y - 122 }, { x: 640, y: GROUND_Y - 78 }, { x: 740, y: GROUND_Y - 106 },
+        { x: 840, y: GROUND_Y - 55 },
       ];
+      const nearPts = [
+        { x: -20, y: GROUND_Y }, { x: 50,  y: GROUND_Y - 28 }, { x: 130, y: GROUND_Y - 68 },
+        { x: 230, y: GROUND_Y - 44 }, { x: 340, y: GROUND_Y - 72 }, { x: 460, y: GROUND_Y - 38 },
+        { x: 570, y: GROUND_Y - 76 }, { x: 680, y: GROUND_Y - 52 }, { x: 790, y: GROUND_Y - 30 },
+        { x: 860, y: GROUND_Y },
+      ];
+      function buildMtnPath(pts) {
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 0; i < pts.length - 1; i++) {
+          const mx = (pts[i].x + pts[i + 1].x) / 2;
+          const my = (pts[i].y + pts[i + 1].y) / 2;
+          ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+        }
+        ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+      }
+      // Far layer fill
       ctx.save();
-      ctx.fillStyle = '#200040';
-      ctx.shadowColor = '#aa00ff'; ctx.shadowBlur = 16;
-      ctx.beginPath(); ctx.moveTo(0, GROUND_Y);
-      peaks.forEach(([px, ph]) => {
-        ctx.lineTo(px - 75, GROUND_Y);
-        ctx.lineTo(px, GROUND_Y - ph);
-        ctx.lineTo(px + 75, GROUND_Y);
-      });
-      ctx.lineTo(LW, GROUND_Y); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = '#cc00ff'; ctx.shadowBlur = 10; ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.moveTo(0, GROUND_Y);
-      peaks.forEach(([px, ph]) => {
-        ctx.lineTo(px - 75, GROUND_Y); ctx.lineTo(px, GROUND_Y - ph); ctx.lineTo(px + 75, GROUND_Y);
-      });
-      ctx.stroke(); ctx.restore();
+      const farFill = ctx.createLinearGradient(0, GROUND_Y - 122, 0, GROUND_Y);
+      farFill.addColorStop(0, '#1c0040'); farFill.addColorStop(1, '#110026');
+      ctx.fillStyle = farFill; ctx.shadowColor = '#8800cc'; ctx.shadowBlur = 18;
+      ctx.beginPath(); buildMtnPath(farPts);
+      ctx.lineTo(LW + 40, GROUND_Y); ctx.lineTo(-40, GROUND_Y); ctx.closePath(); ctx.fill();
+      // Far layer ridgeline only (separate path avoids baseline stroke)
+      ctx.strokeStyle = '#9900cc'; ctx.lineWidth = 1.5; ctx.shadowColor = '#cc00ff'; ctx.shadowBlur = 10;
+      ctx.beginPath(); buildMtnPath(farPts); ctx.stroke();
+      ctx.restore();
+      // Near layer fill
+      ctx.save();
+      const nearFill = ctx.createLinearGradient(0, GROUND_Y - 76, 0, GROUND_Y);
+      nearFill.addColorStop(0, '#2a0058'); nearFill.addColorStop(1, '#160030');
+      ctx.fillStyle = nearFill; ctx.shadowColor = '#cc00ff'; ctx.shadowBlur = 14;
+      ctx.beginPath(); buildMtnPath(nearPts);
+      ctx.lineTo(LW + 20, GROUND_Y); ctx.lineTo(-20, GROUND_Y); ctx.closePath(); ctx.fill();
+      // Near layer ridgeline only
+      ctx.strokeStyle = '#cc00ff'; ctx.lineWidth = 1.8; ctx.shadowColor = '#ff44ff'; ctx.shadowBlur = 12;
+      ctx.beginPath(); buildMtnPath(nearPts); ctx.stroke();
+      ctx.restore();
     }
 
     function drawGround(dist) {
@@ -328,53 +353,119 @@ function InfinityRunGame() {
       ctx.save();
 
       if (type.startsWith('cactus')) {
-        ctx.fillStyle = '#cc00ff'; ctx.shadowColor = '#cc00ff'; ctx.shadowBlur = 18;
+        function cactSeg(rx, ry, rw, rh, r) {
+          const g = ctx.createLinearGradient(rx, ry, rx + rw, ry);
+          g.addColorStop(0, '#ff66ff'); g.addColorStop(0.35, '#cc00ff'); g.addColorStop(1, '#660099');
+          ctx.fillStyle = g; ctx.shadowColor = '#cc00ff'; ctx.shadowBlur = 14;
+          rrPath(ctx, rx, ry, rw, rh, r); ctx.fill();
+          ctx.globalAlpha = 0.26; ctx.fillStyle = '#fff';
+          rrPath(ctx, rx + 2, ry + 2, Math.max(2, rw * 0.28), rh - 4, r); ctx.fill();
+          ctx.globalAlpha = 1;
+        }
+        function spines(sx, sy, dir) {
+          ctx.strokeStyle = '#ff88ff'; ctx.lineWidth = 1.1; ctx.shadowBlur = 5;
+          for (let i = 0; i < 3; i++) {
+            const oy = (i - 1) * 4;
+            ctx.beginPath(); ctx.moveTo(sx, sy + oy); ctx.lineTo(sx + dir * 8, sy + oy - 3 + i * 2); ctx.stroke();
+          }
+        }
         const mid = x + w / 2;
         if (type === 'cactus_tall') {
-          ctx.fillRect(mid - 8, top, 16, h);
-          ctx.fillRect(mid - 24, top + h * 0.28, 16, 10);
-          ctx.fillRect(mid - 24, top + h * 0.12, 10, h * 0.18);
-          ctx.fillRect(mid + 8,  top + h * 0.40, 16, 10);
-          ctx.fillRect(mid + 14, top + h * 0.24, 10, h * 0.18);
+          cactSeg(mid - 30, top + h * 0.10, 22, 10, 4);
+          cactSeg(mid - 30, top + h * 0.10, 10, h * 0.20, 4);
+          cactSeg(mid + 8,  top + h * 0.28, 22, 10, 4);
+          cactSeg(mid + 18, top + h * 0.12, 10, h * 0.18, 4);
+          cactSeg(mid - 9,  top, 18, h, 7);
+          spines(mid - 30, top + h * 0.10, -1);
+          spines(mid - 9,  top + h * 0.10, +1);
+          spines(mid + 8,  top + h * 0.28, -1);
+          spines(mid + 30, top + h * 0.28, +1);
         } else if (type === 'cactus_short') {
-          ctx.fillRect(mid - 9, top, 18, h);
-          ctx.fillRect(mid - 22, top + h * 0.35, 14, 10);
-          ctx.fillRect(mid + 9,  top + h * 0.42, 14, 10);
+          cactSeg(mid - 24, top + h * 0.33, 16, 10, 4);
+          cactSeg(mid - 16, top + h * 0.14, 9,  h * 0.22, 4);
+          cactSeg(mid + 8,  top + h * 0.40, 16, 10, 4);
+          cactSeg(mid + 7,  top + h * 0.22, 9,  h * 0.20, 4);
+          cactSeg(mid - 8, top, 16, h, 7);
+          spines(mid - 24, top + h * 0.33, -1);
+          spines(mid + 24, top + h * 0.40, +1);
         } else {
-          ctx.fillRect(x + 3,       top + 14, 16, h - 14);
-          ctx.fillRect(x + w - 19,  top + 8,  16, h - 8);
-          ctx.fillRect(x + 3,       top + h * 0.30, 12, 10);
-          ctx.fillRect(x + w - 19,  top + h * 0.22, 12, 10);
+          const lx = x + 4, rx2 = x + w - 22;
+          cactSeg(lx - 10, top + h * 0.28, 14, 10, 4);
+          cactSeg(lx - 10, top + h * 0.14, 8, h * 0.16, 4);
+          cactSeg(lx, top + 14, 14, h - 14, 6);
+          spines(lx - 10, top + h * 0.28, -1);
+          cactSeg(rx2 + 14, top + h * 0.20, 14, 10, 4);
+          cactSeg(rx2 + 14, top + h * 0.06, 8,  h * 0.16, 4);
+          cactSeg(rx2, top + 6, 14, h - 6, 6);
+          spines(rx2 + 28, top + h * 0.20, +1);
         }
 
       } else {
         // Bird
         const cx = x + w / 2, cy = top + h / 2;
         const wb = Math.floor(tick / 10) % 2 === 0;
-        ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 20;
-        // Wings
-        ctx.fillStyle = '#00ccff';
-        const wd = wb ? 10 : -4;
-        ctx.beginPath(); ctx.moveTo(cx - 6, cy);
-        ctx.quadraticCurveTo(cx - w / 2, cy + wd, cx - w / 2 + 4, cy - h / 3); ctx.closePath(); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(cx + 6, cy);
-        ctx.quadraticCurveTo(cx + w / 2, cy + wd, cx + w / 2 - 4, cy - h / 3); ctx.closePath(); ctx.fill();
+        const wd = wb ? 8 : -5;
+        ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 22;
+
+        // Tail feathers
+        ctx.fillStyle = '#005588';
+        ctx.beginPath();
+        ctx.moveTo(cx - w / 2 + 8, cy - 2);
+        ctx.lineTo(cx - w / 2 - 6, cy - 8);
+        ctx.lineTo(cx - w / 2 - 2, cy + 2);
+        ctx.lineTo(cx - w / 2 - 8, cy + 6);
+        ctx.lineTo(cx - w / 2 + 8, cy + 4);
+        ctx.closePath(); ctx.fill();
+
+        // Wings with gradient
+        const wingLG = ctx.createLinearGradient(cx - w / 2, cy, cx, cy);
+        wingLG.addColorStop(0, '#0055aa'); wingLG.addColorStop(1, '#00ccff');
+        ctx.fillStyle = wingLG;
+        ctx.beginPath(); ctx.moveTo(cx - 7, cy - 2);
+        ctx.quadraticCurveTo(cx - w / 2, cy + wd, cx - w / 2 + 6, cy - h / 3 + 2);
+        ctx.quadraticCurveTo(cx - 14, cy - h / 3 - 4, cx - 7, cy - 2);
+        ctx.closePath(); ctx.fill();
+
+        const wingRG = ctx.createLinearGradient(cx, cy, cx + w / 2, cy);
+        wingRG.addColorStop(0, '#00ccff'); wingRG.addColorStop(1, '#0055aa');
+        ctx.fillStyle = wingRG;
+        ctx.beginPath(); ctx.moveTo(cx + 7, cy - 2);
+        ctx.quadraticCurveTo(cx + w / 2, cy + wd, cx + w / 2 - 6, cy - h / 3 + 2);
+        ctx.quadraticCurveTo(cx + 14, cy - h / 3 - 4, cx + 7, cy - 2);
+        ctx.closePath(); ctx.fill();
+
+        // Wing detail lines
+        ctx.strokeStyle = 'rgba(0,210,255,0.38)'; ctx.lineWidth = 0.9; ctx.shadowBlur = 0;
+        ctx.beginPath(); ctx.moveTo(cx - 7, cy - 2); ctx.lineTo(cx - w / 2 + 6, cy - h / 3 + 2); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(cx + 7, cy - 2); ctx.lineTo(cx + w / 2 - 6, cy - h / 3 + 2); ctx.stroke();
+
         // Body
-        ctx.fillStyle = '#0099dd';
-        ctx.beginPath(); ctx.ellipse(cx, cy, w / 2 - 6, h / 2 - 2, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 14;
+        const bodyG = ctx.createLinearGradient(cx, cy - h / 2, cx, cy + h / 2);
+        bodyG.addColorStop(0, '#00ccff'); bodyG.addColorStop(1, '#0055aa');
+        ctx.fillStyle = bodyG;
+        ctx.beginPath(); ctx.ellipse(cx, cy, w / 2 - 5, h / 2 - 1, 0, 0, Math.PI * 2); ctx.fill();
+
         // Head
-        ctx.fillStyle = '#00ccff';
-        ctx.beginPath(); ctx.arc(cx + w / 2 - 13, cy - 3, 10, 0, Math.PI * 2); ctx.fill();
-        // Eye + beak
+        ctx.fillStyle = '#00aadd'; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.arc(cx + w / 2 - 12, cy - 4, 10, 0, Math.PI * 2); ctx.fill();
+
+        // Eye + highlight
         ctx.shadowBlur = 0;
         ctx.fillStyle = '#fff';
-        ctx.beginPath(); ctx.arc(cx + w / 2 - 9, cy - 5, 3.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(cx + w / 2 - 8, cy - 6, 3.8, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#001133';
-        ctx.beginPath(); ctx.arc(cx + w / 2 - 8, cy - 5, 1.8, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#ffbb00';
+        ctx.beginPath(); ctx.arc(cx + w / 2 - 7, cy - 6, 2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff';
+        ctx.beginPath(); ctx.arc(cx + w / 2 - 6.4, cy - 7, 0.9, 0, Math.PI * 2); ctx.fill();
+
+        // Beak
+        ctx.fillStyle = '#ffcc00';
         ctx.beginPath();
-        ctx.moveTo(cx + w / 2 - 3, cy - 4); ctx.lineTo(cx + w / 2 + 7, cy - 1);
-        ctx.lineTo(cx + w / 2 - 3, cy + 2); ctx.closePath(); ctx.fill();
+        ctx.moveTo(cx + w / 2 - 2, cy - 5);
+        ctx.lineTo(cx + w / 2 + 8, cy - 2);
+        ctx.lineTo(cx + w / 2 - 2, cy + 1);
+        ctx.closePath(); ctx.fill();
       }
       ctx.restore();
     }
@@ -431,8 +522,10 @@ function InfinityRunGame() {
           : OBS_KEYS.filter(k => k !== 'bird');
         const key = pool[Math.floor(Math.random() * pool.length)];
         s.obstacles.push({ x: LW + 20, type: key, ...OBS[key] });
-        const gapSec = 0.9 + Math.random() * 1.4;
-        s.nextObs = s.dist + Math.max(260, gapSec * s.speed * 60);
+        const speedNorm = Math.min(1, (s.speed - INIT_SPEED) / (MAX_SPEED - INIT_SPEED));
+        const maxGap = 820 - speedNorm * 280;
+        const gap = 380 + Math.random() * Math.max(0, maxGap - 380);
+        s.nextObs = s.dist + gap;
       }
 
       // Collision (AABB with leniency)
@@ -496,10 +589,7 @@ function InfinityRunGame() {
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,12,0.28)', zIndex: 2 }} />
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 3, backgroundImage: 'linear-gradient(rgba(0,0,0,0.055) 50%, transparent 50%)', backgroundSize: '100% 4px' }} />
 
-      <Link to="/" style={{ position: 'absolute', top: 22, left: 24, zIndex: 20, fontFamily: "'Orbitron', sans-serif", fontSize: 10, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.35)', textDecoration: 'none', textTransform: 'uppercase', transition: 'color 0.15s' }}
-        onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.85)'}
-        onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
-      >← BACK</Link>
+      <HomeButton />
 
       <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
         {/* HUD */}

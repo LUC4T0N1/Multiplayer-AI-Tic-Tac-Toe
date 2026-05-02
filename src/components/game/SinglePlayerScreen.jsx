@@ -6,6 +6,7 @@ import MeshBackground from '../ui/MeshBackground';
 import WaveAnimation from '../ui/WaveAnimation';
 import RetrowaveMountains from '../ui/RetrowaveMountains';
 import isMobile from '../../utils/isMobile';
+import HomeButton from '../ui/HomeButton';
 import './SinglePlayerScreen.css';
 
 /* ── SVG X mark ── */
@@ -265,16 +266,7 @@ function SinglePlayerScreen({ result, chooseSquare, handleRestart, board }) {
         overflowY: 'auto',
       }}>
 
-        {/* Back */}
-        <Link to="/" style={{
-          position: 'absolute', top: 22, left: 24,
-          fontFamily: "'Orbitron', sans-serif", fontSize: 10, letterSpacing: '0.14em',
-          color: 'rgba(255,255,255,0.35)', textDecoration: 'none', textTransform: 'uppercase',
-          transition: 'color 0.15s',
-        }}
-          onMouseEnter={e => e.currentTarget.style.color = 'rgba(187, 248, 245, 0.85)'}
-          onMouseLeave={e => e.currentTarget.style.color = 'rgba(255, 255, 255, 1)'}
-        >{t('back')}</Link>
+        <HomeButton />
 
         {/* Score */}
         <div style={{ marginBottom: 16, animation: 'spFadeUp 0.5s both' }}>

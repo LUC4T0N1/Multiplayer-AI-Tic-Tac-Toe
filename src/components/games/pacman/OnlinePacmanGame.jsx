@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import HomeButton from '../../ui/HomeButton';
 import isMobile from '../../../utils/isMobile';
 
 const COLS = 21;
@@ -158,6 +159,24 @@ function OnlinePacmanGame({ socket, room, opponentName }) {
   // Cleanup on unmount
   useEffect(() => () => { socket.emit('pacman-leave', { room }); }, [socket, room]);
 
+  const checkGameOver = useCallback(() => {
+    const s = myStateRef.current;
+    const opp = oppStateRef.current;
+    if (s && opp && s.status === 'dead' && opp.status === 'dead') {
+      if (resultRef.current) return;
+      if (s.score > opp.score) {
+        resultRef.current = 'win';
+        setResult('win');
+      } else if (s.score < opp.score) {
+        resultRef.current = 'lose';
+        setResult('lose');
+      } else {
+        resultRef.current = 'tie';
+        setResult('tie');
+      }
+    }
+  }, []);
+
   // Socket listeners for opponent updates
   useEffect(() => {
     const onState = ({ pac, ghosts, score, lives, level }) => {
@@ -179,14 +198,31 @@ function OnlinePacmanGame({ socket, room, opponentName }) {
     };
     const onDot   = ({ row, col }) => { if (oppStateRef.current) oppStateRef.current.maze[row][col] = 0; };
     const onPower = ({ row, col }) => { if (oppStateRef.current) oppStateRef.current.maze[row][col] = 0; };
-    const onOppOver    = () => { if (!resultRef.current) { resultRef.current = 'win';      setResult('win'); } };
-    const onOppLeft    = () => { if (!resultRef.current) { resultRef.current = 'opp-left'; setResult('opp-left'); } };
+
+    const onOppDied = ({ score }) => {
+      const opp = oppStateRef.current;
+      if (opp) {
+        opp.status = 'dead';
+        if (score !== undefined) {
+          opp.score = score;
+          setOppUi(u => ({ ...u, score }));
+        }
+      }
+      checkGameOver();
+    };
+
+    const onOppLeft = () => {
+      if (resultRef.current) return;
+      if (oppStateRef.current?.status === 'dead') return;
+      resultRef.current = 'opp-left';
+      setResult('opp-left');
+    };
     const onRestartReady = () => { oppReadyRef.current = true; if (myReadyRef.current) doRestart(); };
 
     socket.on('pacman-state',          onState);
     socket.on('pacman-dot',            onDot);
     socket.on('pacman-power',          onPower);
-    socket.on('pacman-opp-over',       onOppOver);
+    socket.on('pacman-opp-died',       onOppDied);
     socket.on('pacman-opp-left',       onOppLeft);
     socket.on('pacman-restart-ready',  onRestartReady);
 
@@ -194,11 +230,11 @@ function OnlinePacmanGame({ socket, room, opponentName }) {
       socket.off('pacman-state',         onState);
       socket.off('pacman-dot',           onDot);
       socket.off('pacman-power',         onPower);
-      socket.off('pacman-opp-over',      onOppOver);
+      socket.off('pacman-opp-died',      onOppDied);
       socket.off('pacman-opp-left',      onOppLeft);
       socket.off('pacman-restart-ready', onRestartReady);
     };
-  }, [socket, doRestart]);
+  }, [socket, doRestart, checkGameOver]);
 
   // Keyboard controls
   useEffect(() => {
@@ -494,11 +530,8 @@ function OnlinePacmanGame({ socket, room, opponentName }) {
           if (s.lives <= 0) {
             s.status = 'dead';
             setMyUi(u => ({ ...u, status: 'dead' }));
-            if (!resultRef.current) {
-              resultRef.current = 'lose';
-              setResult('lose');
-              socket.emit('pacman-over', { room });
-            }
+            socket.emit('pacman-died', { room, score: s.score });
+            checkGameOver();
           } else {
             resetPositions(s);
           }
@@ -565,7 +598,26 @@ function OnlinePacmanGame({ socket, room, opponentName }) {
 
       // Draw
       draw(myCtx, s, ts, C);
-      if (oppCtx) draw(oppCtx, oppStateRef.current, ts, C);
+      if (s.status === 'dead' && !resultRef.current) {
+        myCtx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        myCtx.fillRect(0, 0, C * COLS, C * ROWS);
+        myCtx.fillStyle = '#ff2d78';
+        myCtx.textAlign = 'center';
+        myCtx.font = `bold ${isMobile ? 16 : 24}px Orbitron, sans-serif`;
+        myCtx.fillText('DIED - SPECTATING', C * COLS / 2, C * ROWS / 2);
+      }
+
+      if (oppCtx) {
+        draw(oppCtx, oppStateRef.current, ts, C);
+        if (oppStateRef.current?.status === 'dead' && !resultRef.current) {
+          oppCtx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+          oppCtx.fillRect(0, 0, C * COLS, C * ROWS);
+          oppCtx.fillStyle = '#ff2d78';
+          oppCtx.textAlign = 'center';
+          oppCtx.font = `bold ${isMobile ? 16 : 24}px Orbitron, sans-serif`;
+          oppCtx.fillText('OPPONENT DIED', C * COLS / 2, C * ROWS / 2);
+        }
+      }
 
       animRef.current = requestAnimationFrame(tick);
     }
@@ -576,17 +628,14 @@ function OnlinePacmanGame({ socket, room, opponentName }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const resultColor = result === 'win' ? '#00ffcc' : result === 'lose' ? '#ff2d78' : '#ff8c00';
+  const resultColor = result === 'win' ? '#00ffcc' : result === 'tie' ? '#ffe066' : result === 'lose' ? '#ff2d78' : '#ff8c00';
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#050010', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
       {/* scanlines */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 3, backgroundImage: 'linear-gradient(rgba(0,0,0,0.055) 50%, transparent 50%)', backgroundSize: '100% 4px' }} />
 
-      <Link to="/" style={{ position: 'absolute', top: 22, left: 24, zIndex: 20, fontFamily: "'Orbitron',sans-serif", fontSize: 10, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.35)', textDecoration: 'none', textTransform: 'uppercase' }}
-        onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.85)'}
-        onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
-      >← BACK</Link>
+      <HomeButton />
 
       {/* Full-screen result overlay */}
       {result && (
@@ -606,7 +655,7 @@ function OnlinePacmanGame({ socket, room, opponentName }) {
             textShadow: `0 0 40px ${resultColor}, 0 0 80px ${resultColor}55`,
             zIndex: 1,
           }}>
-            {result === 'win' ? 'YOU WIN!' : result === 'lose' ? 'YOU LOSE' : 'OPPONENT LEFT'}
+            {result === 'win' ? 'YOU WIN!' : result === 'lose' ? 'YOU LOSE' : result === 'tie' ? 'TIE!' : 'OPPONENT LEFT'}
           </div>
 
           {/* Score comparison */}
@@ -657,14 +706,9 @@ function OnlinePacmanGame({ socket, room, opponentName }) {
           )}
 
           {/* Back to menu */}
-          <Link to="/" style={{
-            zIndex: 1, fontFamily: "'Orbitron', sans-serif", fontSize: 10,
-            letterSpacing: '0.18em', color: 'rgba(255,255,255,0.32)',
-            textDecoration: 'none', textTransform: 'uppercase', marginTop: 4,
-          }}
-            onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.75)'}
-            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.32)'}
-          >← BACK TO MENU</Link>
+          <div style={{ marginTop: 20 }}>
+            <HomeButton />
+          </div>
         </div>
       )}
 

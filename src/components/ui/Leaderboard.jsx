@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import isMobile from '../../utils/isMobile';
+import HomeButton from './HomeButton';
 
 const fmtDate = (iso) => {
   const d = new Date(iso);
@@ -15,6 +17,7 @@ const fmtDate = (iso) => {
  *   visible     – controls whether the overlay is rendered
  */
 function Leaderboard({ apiUrl, score, sessionToken, onPlayAgain, visible }) {
+  const navigate = useNavigate();
   const [data, setData] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -100,6 +103,8 @@ function Leaderboard({ apiUrl, score, sessionToken, onPlayAgain, visible }) {
       padding: '16px',
       overflowY: 'auto',
     }}>
+      <HomeButton />
+
       {/* Scanlines */}
       <div style={{
         position: 'fixed', inset: 0, pointerEvents: 'none',

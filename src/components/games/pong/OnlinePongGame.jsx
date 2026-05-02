@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import isMobile from '../../../utils/isMobile';
+import HomeButton from '../../ui/HomeButton';
 
 const LW = 800, LH = 480;
 const BALL_R = 8;
@@ -140,19 +141,20 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
 
     // Guest receives ball state from host (with spd/hits for consistent bounces)
     const onBall = ({ x, y, vx, vy, spd, hits }) => {
+      if (!isHost && guestHitSentRef.current && vx > 0) return;
+      if (!isHost && vx < 0) guestHitSentRef.current = false;
       remoteBallRef.current = { x, y, vx, vy, spd: spd ?? INIT_SPEED, hits: hits ?? 0, ts: performance.now() };
     };
 
     // Host receives collision report from guest — guest knows EXACTLY where its paddle is
-    const onHit = ({ paddleY, hitY }) => {
+    const onHit = ({ x, y, vx, vy, spd, hits }) => {
       const s = stateRef.current;
       if (!s || s.phase !== 'playing') return;
       const b = s.ball;
-      // Only apply if ball is still heading right and within plausible range
-      if (b.vx <= 0) return;
-      b.x = A_LEFT - BALL_R - 0.5;
-      b.y = hitY;
-      applyBounce(b, paddleY, -1);
+      // Accept hit if ball is on the right half of the screen (prevents very stale hits)
+      if (b.x < LW / 2) return;
+      
+      b.x = x; b.y = y; b.vx = vx; b.vy = vy; b.spd = spd; b.hits = hits;
       // Force-send the corrected state to guest immediately
       socket.emit('pong-ball', { room, x: b.x, y: b.y, vx: b.vx, vy: b.vy, spd: b.spd, hits: b.hits });
     };
@@ -358,9 +360,9 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
     // without ever looking "teleport-y". On large gaps (e.g. first frame) we snap.
     function smoothPad(current, target, dt) {
       const diff = target - current;
-      if (Math.abs(diff) > 120) return target; // snap on big gaps
-      const maxStep = PLAYER_SPD * dt * 60 * 2.2;
-      return current + Math.max(-maxStep, Math.min(maxStep, diff));
+      if (Math.abs(diff) > 150) return target;
+      // frame-rate independent lerp
+      return current + diff * (1 - Math.exp(-dt * 20));
     }
 
     function update(dt, s) {
@@ -394,24 +396,38 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
         if (remoteOppPadRef.current !== null)
           s.pY = smoothPad(s.pY, remoteOppPadRef.current, dt);
 
-        // Dead-reckoning: extrapolate from last received ball state
+        // Advance local ball physics
+        const dt_60 = dt * 60;
+        s.ball.x += s.ball.vx * dt_60;
+        s.ball.y += s.ball.vy * dt_60;
+        if (s.ball.y - BALL_R < 0) { s.ball.y = BALL_R; s.ball.vy = Math.abs(s.ball.vy); }
+        if (s.ball.y + BALL_R > LH) { s.ball.y = LH - BALL_R; s.ball.vy = -Math.abs(s.ball.vy); }
+
+        // Soft correct towards remote ball
         const rb = remoteBallRef.current;
         if (rb) {
-          const age  = Math.min((performance.now() - rb.ts) * 0.001, 0.12);
+          const age  = Math.min((performance.now() - rb.ts) * 0.001, 0.2);
           let extX = rb.x + rb.vx * age * 60;
           let extY = rb.y + rb.vy * age * 60;
-          // Approximate Y wall reflections during extrapolation
-          if (extY - BALL_R < 0)   extY = -(extY - BALL_R) + BALL_R;
-          if (extY + BALL_R > LH)  extY = 2 * (LH - BALL_R) - (extY + BALL_R);
-          extX = Math.max(BALL_R, Math.min(LW - BALL_R, extX));
-          extY = Math.max(BALL_R, Math.min(LH - BALL_R, extY));
-          const dx = extX - s.ball.x, dy = extY - s.ball.y;
-          // Lerp — snap if very far off (point just reset, etc.)
-          const k = (dx * dx + dy * dy) > 5000 ? 0.7 : 0.25;
-          s.ball.x += dx * k;
-          s.ball.y += dy * k;
-          s.ball.vx = rb.vx; s.ball.vy = rb.vy;
-          s.ball.spd = rb.spd; s.ball.hits = rb.hits;
+          // Approximate Y wall reflections
+          if (extY - BALL_R < 0)   { extY = BALL_R + -(extY - BALL_R); }
+          if (extY + BALL_R > LH)  { extY = LH - BALL_R - (extY + BALL_R - LH); }
+          
+          const dx = extX - s.ball.x;
+          const dy = extY - s.ball.y;
+          const distSq = dx * dx + dy * dy;
+          
+          if (distSq > 10000) {
+            s.ball.x = extX; s.ball.y = extY;
+          } else {
+            s.ball.x += dx * 0.15;
+            s.ball.y += dy * 0.15;
+          }
+          // Blend velocity slightly to match host
+          s.ball.vx = s.ball.vx * 0.8 + rb.vx * 0.2;
+          s.ball.vy = s.ball.vy * 0.8 + rb.vy * 0.2;
+          s.ball.spd = rb.spd; 
+          s.ball.hits = rb.hits;
         }
 
         // ── Guest-authoritative collision on own (right) paddle ──────────────
@@ -419,21 +435,19 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
         // When the ball reaches the paddle face, tell the host.
         const b = s.ball;
         if (b.vx > 0) {
-          if (b.x + BALL_R >= A_LEFT && !guestHitSentRef.current) {
+          if (b.x + BALL_R >= A_LEFT && b.x - BALL_R <= A_LEFT + PAD_W && !guestHitSentRef.current) {
             if (b.y >= s.aY - BALL_R && b.y <= s.aY + PAD_H + BALL_R) {
               // HIT — report to host and apply locally
               guestHitSentRef.current = true;
               const hitY = Math.max(s.aY, Math.min(s.aY + PAD_H, b.y));
-              socket.emit('pong-hit', { room, paddleY: s.aY, hitY });
               b.x = A_LEFT - BALL_R - 0.5;
               b.y = hitY;
               applyBounce(b, s.aY, -1);
+              socket.emit('pong-hit', { room, x: b.x, y: b.y, vx: b.vx, vy: b.vy, spd: b.spd, hits: b.hits });
               // Overwrite the remote ref so dead-reckoning uses the new velocity
               remoteBallRef.current = { x: b.x, y: b.y, vx: b.vx, vy: b.vy, spd: b.spd, hits: b.hits, ts: performance.now() };
             }
           }
-        } else {
-          guestHitSentRef.current = false; // reset for next approach
         }
         return;
       }
@@ -455,46 +469,26 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
       if (newY - BALL_R <= 0)  { newY = BALL_R;      b.vy =  Math.abs(b.vy); }
       if (newY + BALL_R >= LH) { newY = LH - BALL_R; b.vy = -Math.abs(b.vy); }
 
-      // ── CCD collision — left paddle (host's own) ──────────────────────────
-      // Uses ball start position so hitY is evaluated at the EXACT crossing instant.
+      // ── Collision — left paddle (host's own) ──────────────────────────
       let collided = false;
-      if (!collided && b.vx < 0 && b.x - BALL_R > P_RIGHT - 1) {
-        const denom = -dvx;
-        if (denom > 0.001) {
-          const t = (b.x - BALL_R - P_RIGHT) / denom;
-          if (t >= 0 && t <= 1.1) {
-            const hitY = b.y + dvy * t;
-            if (hitY >= s.pY - BALL_R && hitY <= s.pY + PAD_H + BALL_R) {
-              newX = P_RIGHT + BALL_R + 0.5;
-              newY = Math.max(s.pY, Math.min(s.pY + PAD_H, hitY));
-              b.y  = newY;
-              applyBounce(b, s.pY, +1);
-              collided = true;
-            }
+      if (b.vx < 0) {
+        const crossed = (b.x - BALL_R > P_RIGHT && newX - BALL_R <= P_RIGHT);
+        const overlapping = (newX - BALL_R <= P_RIGHT && newX + BALL_R >= P_RIGHT - PAD_W);
+        if (crossed || overlapping) {
+          let hitY = newY;
+          if (crossed && dvx < -0.001) hitY = b.y + dvy * ((P_RIGHT - (b.x - BALL_R)) / dvx);
+          if (hitY >= s.pY - BALL_R && hitY <= s.pY + PAD_H + BALL_R) {
+            newX = P_RIGHT + BALL_R + 0.5;
+            b.y = hitY;
+            applyBounce(b, s.pY, +1);
+            collided = true;
           }
         }
       }
 
-      // ── CCD collision — right paddle (guest's), fallback only ────────────
-      // Guest's pong-hit is authoritative; this fires only if pong-hit didn't arrive in time.
-      if (!collided && b.vx > 0 && b.x + BALL_R < A_LEFT + 1) {
-        const denom = dvx;
-        if (denom > 0.001) {
-          const t = (A_LEFT - (b.x + BALL_R)) / denom;
-          if (t >= 0 && t <= 1.1) {
-            const hitY = b.y + dvy * t;
-            // Moderate tolerance: covers ~1.5 frames of max paddle movement
-            const tol = BALL_R + PLAYER_SPD * 1.5;
-            if (hitY >= s.aY - tol && hitY <= s.aY + PAD_H + tol) {
-              newX = A_LEFT - BALL_R - 0.5;
-              newY = Math.max(s.aY, Math.min(s.aY + PAD_H, hitY));
-              b.y  = newY;
-              applyBounce(b, s.aY, -1);
-              collided = true;
-            }
-          }
-        }
-      }
+      // ── We do NOT apply fallback collision for the right paddle here. ──
+      // The Guest is entirely authoritative over its own paddle (Red Player).
+      // The 'pong-hit' packet will overwrite the ball's trajectory if the Guest hit it.
 
       b.x = newX;
       b.y = newY;
@@ -503,8 +497,8 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
       // but more frequent = less extrapolation error near bounces.
       socket.emit('pong-ball', { room, x: b.x, y: b.y, vx: b.vx, vy: b.vy, spd: b.spd, hits: b.hits });
 
-      // ── Scoring ──
-      if (b.x - BALL_R <= 0) {
+      // ── Scoring (delayed boundaries to allow late 'pong-hit' packets) ──
+      if (b.x < -150) {
         s.aScore++;
         if (s.aScore >= WIN_SCORE) { s.phase = 'gameover'; s.winner = 'ai'; }
         else { s.ball = newBall(-1); s.phase = 'countdown'; s.cdown = COUNTDOWN_SEC; }
@@ -512,7 +506,7 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
         setUi({ pScore: s.pScore, aScore: s.aScore, phase: s.phase, winner: s.winner, oppLeft: false });
         return;
       }
-      if (b.x + BALL_R >= LW) {
+      if (b.x > LW + 150) {
         s.pScore++;
         if (s.pScore >= WIN_SCORE) { s.phase = 'gameover'; s.winner = 'player'; }
         else { s.ball = newBall(1); s.phase = 'countdown'; s.cdown = COUNTDOWN_SEC; }
@@ -570,14 +564,7 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
         backgroundSize: '100% 4px',
       }} />
 
-      <Link to="/" style={{
-        position: 'absolute', top: 22, left: 24, zIndex: 20,
-        fontFamily: "'Orbitron', sans-serif", fontSize: 10, letterSpacing: '0.14em',
-        color: 'rgba(255,255,255,0.35)', textDecoration: 'none', textTransform: 'uppercase',
-      }}
-        onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.85)'}
-        onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
-      >← BACK</Link>
+      <HomeButton />
 
       <div style={{
         position: 'absolute', top: 22, right: 24, zIndex: 20,

@@ -1,35 +1,39 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import OnlineTetrisGame from './OnlineTetrisGame';
+import OnlineSnakeGame from './OnlineSnakeGame';
 import HomeButton from '../../ui/HomeButton';
 
-function TetrisFriendLobby({ socket }) {
+function SnakeRandomQueue({ socket }) {
   const [phase, setPhase]       = useState('form');
   const [username, setUsername] = useState('');
-  const [roomId, setRoomId]     = useState('');
   const [gameData, setGameData] = useState(null);
   const [error, setError]       = useState('');
 
   useEffect(() => {
-    const onWaiting = () => setPhase('waiting');
-    const onReady   = ({ room, opponent }) => { setGameData({ room, opponent }); setPhase('game'); };
-    socket.on('tetris-waiting',    onWaiting);
-    socket.on('tetris-room-ready', onReady);
-    return () => { socket.off('tetris-waiting', onWaiting); socket.off('tetris-room-ready', onReady); };
+    const onStart = ({ room, opponent }) => { setGameData({ room, opponent }); setPhase('game'); };
+    socket.on('snake-game-start', onStart);
+    return () => {
+      socket.off('snake-game-start', onStart);
+      socket.emit('snake-leave-queue');
+    };
   }, [socket]);
 
-  const join = (e) => {
+  const joinQueue = (e) => {
     e.preventDefault();
     const name = username.trim();
-    const room = roomId.trim();
     if (!name) { setError('Enter your username'); return; }
-    if (!room) { setError('Enter a room ID'); return; }
     setError('');
-    socket.emit('tetris-join-room', { room, username: name });
+    socket.emit('snake-join-queue', { username: name });
+    setPhase('queued');
+  };
+
+  const leaveQueue = () => {
+    socket.emit('snake-leave-queue');
+    setPhase('form');
   };
 
   if (phase === 'game' && gameData) {
-    return <OnlineTetrisGame socket={socket} room={gameData.room} opponentName={gameData.opponent} />;
+    return <OnlineSnakeGame socket={socket} room={gameData.room} opponentName={gameData.opponent} />;
   }
 
   return (
@@ -46,25 +50,25 @@ function TetrisFriendLobby({ socket }) {
         position: 'relative', zIndex: 10,
         width: '100%', maxWidth: 380,
         background: 'rgba(4,0,18,0.80)',
-        border: '1.5px solid rgba(0,229,255,0.30)',
+        border: '1.5px solid rgba(0,255,204,0.25)',
         borderRadius: 6, padding: '38px 36px 32px',
         backdropFilter: 'blur(16px)',
-        boxShadow: '0 0 40px rgba(0,229,255,0.14), inset 0 0 40px rgba(0,100,255,0.04)',
+        boxShadow: '0 0 40px rgba(0,255,204,0.10), inset 0 0 40px rgba(0,100,255,0.04)',
         display: 'flex', flexDirection: 'column', gap: 0,
         alignItems: 'center',
       }}>
         <div style={{
           fontFamily: "'VT323', monospace", fontSize: 13,
-          color: '#00e5ff', letterSpacing: '0.5em', marginBottom: 6,
-          textShadow: '0 0 10px #00e5ff88',
-        }}>TETRIS</div>
+          color: '#00ffcc', letterSpacing: '0.5em', marginBottom: 6,
+          textShadow: '0 0 10px #00ffcc88',
+        }}>SNAKE</div>
         <div style={{
           fontFamily: "'Orbitron', sans-serif", fontWeight: 900, fontSize: 20,
           color: '#fff', letterSpacing: '0.12em', marginBottom: 28, textTransform: 'uppercase',
-        }}>PLAY WITH FRIEND</div>
+        }}>RANDOM OPPONENT</div>
 
         {phase === 'form' && (
-          <form onSubmit={join} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <form onSubmit={joinQueue} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
             <input
               placeholder="YOUR USERNAME"
               value={username}
@@ -72,41 +76,31 @@ function TetrisFriendLobby({ socket }) {
               maxLength={16}
               style={inputStyle}
             />
-            <input
-              placeholder="ROOM ID"
-              value={roomId}
-              onChange={e => setRoomId(e.target.value)}
-              maxLength={24}
-              style={inputStyle}
-            />
             {error && (
-              <div style={{ color: '#ff2d78', fontFamily: "'Orbitron', sans-serif", fontSize: 10, letterSpacing: '0.1em' }}>
+              <div style={{ color: '#00ffcc', fontFamily: "'Orbitron', sans-serif", fontSize: 10, letterSpacing: '0.1em' }}>
                 {error}
               </div>
             )}
-            <button type="submit" style={btnStyle('#00e5ff')}
-              onMouseEnter={e => { e.currentTarget.style.background = '#00e5ff18'; e.currentTarget.style.color = '#fff'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(4,0,18,0.65)'; e.currentTarget.style.color = '#00e5ff'; }}
+            <button type="submit" style={btnStyle('#00ffcc')}
+              onMouseEnter={e => { e.currentTarget.style.background = '#00ffcc18'; e.currentTarget.style.color = '#fff'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(4,0,18,0.65)'; e.currentTarget.style.color = '#00ffcc'; }}
             >
-              JOIN ROOM
+              FIND MATCH
             </button>
-            <div style={{ color: 'rgba(255,255,255,0.28)', fontFamily: "'Orbitron', sans-serif", fontSize: 9, letterSpacing: '0.1em', textAlign: 'center' }}>
-              SHARE THE ROOM ID WITH YOUR FRIEND
-            </div>
           </form>
         )}
 
-        {phase === 'waiting' && (
+        {phase === 'queued' && (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
             <div style={{
-              fontFamily: "'VT323', monospace", fontSize: 32, color: '#00e5ff',
+              fontFamily: "'VT323', monospace", fontSize: 32, color: '#00ffcc',
               letterSpacing: '0.3em', animation: 'glowPulse 2s ease-in-out infinite',
-              textShadow: '0 0 16px #00e5ff',
-            }}>WAITING…</div>
+              textShadow: '0 0 16px #00ffcc',
+            }}>SEARCHING…</div>
             <div style={{ color: 'rgba(255,255,255,0.38)', fontFamily: "'Orbitron', sans-serif", fontSize: 10, letterSpacing: '0.12em' }}>
-              ROOM: {roomId}
+              LOOKING FOR AN OPPONENT
             </div>
-            <button onClick={() => setPhase('form')} style={{
+            <button onClick={leaveQueue} style={{
               background: 'none', border: 'none', color: 'rgba(255,255,255,0.30)',
               fontFamily: "'Orbitron', sans-serif", fontSize: 10, letterSpacing: '0.15em',
               cursor: 'pointer', textTransform: 'uppercase',
@@ -120,7 +114,7 @@ function TetrisFriendLobby({ socket }) {
 
 const inputStyle = {
   width: '100%', padding: '12px 16px', boxSizing: 'border-box',
-  background: 'rgba(0,229,255,0.05)', border: '1.5px solid rgba(0,229,255,0.25)',
+  background: 'rgba(0,255,204,0.05)', border: '1.5px solid rgba(0,255,204,0.25)',
   borderRadius: 3, color: '#fff', fontFamily: "'Orbitron', sans-serif",
   fontSize: 12, letterSpacing: '0.1em', outline: 'none',
   textTransform: 'uppercase',
@@ -135,4 +129,4 @@ const btnStyle = (color) => ({
   boxShadow: `0 0 8px ${color}33`,
 });
 
-export default TetrisFriendLobby;
+export default SnakeRandomQueue;

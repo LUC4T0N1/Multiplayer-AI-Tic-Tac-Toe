@@ -7,6 +7,7 @@ import MeshBackground from '../ui/MeshBackground';
 import WaveAnimation from '../ui/WaveAnimation';
 import RetrowaveMountains from '../ui/RetrowaveMountains';
 import isMobile from '../../utils/isMobile';
+import HomeButton from '../ui/HomeButton';
 import './SinglePlayerScreen.css';
 
 /* ── SVG X mark ── */
@@ -279,16 +280,7 @@ function OnlineScreen({ result, chooseSquare, handleRestart, board, socket, user
         boxSizing: 'border-box',
       }}>
 
-        {/* Back */}
-        <Link to="/" style={{
-          position: 'absolute', top: 22, left: 24,
-          fontFamily: "'Orbitron', sans-serif", fontSize: 10, letterSpacing: '0.14em',
-          color: 'rgba(255,255,255,0.35)', textDecoration: 'none', textTransform: 'uppercase',
-          transition: 'color 0.15s', zIndex: 20,
-        }}
-          onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.85)'}
-          onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
-        >{t('back')}</Link>
+        <HomeButton />
 
         {/* Board / Letter Selection column */}
         <div style={{

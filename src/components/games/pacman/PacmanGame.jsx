@@ -4,6 +4,7 @@ import MeshBackground from '../../ui/MeshBackground';
 import WaveAnimation from '../../ui/WaveAnimation';
 import Leaderboard from '../../ui/Leaderboard';
 import isMobile from '../../../utils/isMobile';
+import HomeButton from '../../ui/HomeButton';
 
 const COLS = 21;
 const ROWS = 22;
@@ -538,15 +539,7 @@ function PacmanGame() {
         backgroundImage: 'linear-gradient(rgba(0,0,0,0.055) 50%, transparent 50%)',
         backgroundSize: '100% 4px',
       }} />
-      <Link to="/" style={{
-        position: 'absolute', top: 22, left: 24, zIndex: 20,
-        fontFamily: "'Orbitron', sans-serif", fontSize: 10, letterSpacing: '0.14em',
-        color: 'rgba(255,255,255,0.35)', textDecoration: 'none', textTransform: 'uppercase',
-        transition: 'color 0.15s',
-      }}
-        onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.85)'}
-        onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
-      >← BACK</Link>
+      <HomeButton />
 
       <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
         <div style={{

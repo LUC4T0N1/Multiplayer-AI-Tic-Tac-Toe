@@ -4,6 +4,7 @@ import MeshBackground from '../../ui/MeshBackground';
 import WaveAnimation from '../../ui/WaveAnimation';
 import Leaderboard from '../../ui/Leaderboard'; // Importado
 import isMobile from '../../../utils/isMobile';
+import HomeButton from '../../ui/HomeButton';
 
 const BASE_W = 480;
 const BASE_H = 560;
@@ -218,7 +219,7 @@ export default function BreakoutGame() {
       ctx.shadowBlur = 20 * scale;
       ctx.font = `bold ${26 * scale}px 'Courier New', monospace`;
       ctx.textAlign = 'center';
-      ctx.fillText(`LEVEL ${s.level - 1} CLEAR!`, W / 2, BASE_H * scale * 0.46);
+      ctx.fillText(`LEVEL ${s.level} CLEAR!`, W / 2, BASE_H * scale * 0.46);
       ctx.fillStyle = '#00ffcc';
       ctx.shadowColor = '#00ffcc';
       ctx.font = `${16 * scale}px 'Courier New', monospace`;
@@ -255,6 +256,7 @@ export default function BreakoutGame() {
       const steps = 3;
       const dt = rawDt / steps;
       let dead = false;
+      let uiNeedsSync = false;
       for (let step = 0; step < steps && !dead; step++) {
         x += vx * spd * dt;
         y += vy * spd * dt;
@@ -290,6 +292,7 @@ export default function BreakoutGame() {
               b.alive = false;
               s.score += 10 * s.level;
               saveBest(s.score);
+              uiNeedsSync = true;
             }
             const minO = Math.min(ol, or, ot, ob);
             if (minO === ot || minO === ob) vy = -vy;
@@ -302,6 +305,8 @@ export default function BreakoutGame() {
           dead = true;
         }
       }
+
+      if (uiNeedsSync) syncUi();
 
       s.ball.x = x; s.ball.y = y; s.ball.vx = vx; s.ball.vy = vy;
 
@@ -438,7 +443,7 @@ export default function BreakoutGame() {
       {!isMobile && <WaveAnimation />}
 
       <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px 0', boxSizing: 'border-box', position: 'relative', zIndex: 10 }}>
-        <Link to="/" style={{ color: '#cc00ff', fontFamily: "'Courier New', monospace", fontSize: 14, textDecoration: 'none', letterSpacing: 1, textShadow: '0 0 8px #cc00ff' }}>← HOME</Link>
+        <HomeButton />
         <span style={{ color: '#ffb852', fontFamily: "'Courier New', monospace", fontSize: 22, fontWeight: 'bold', letterSpacing: 4, textShadow: '0 0 12px #ffb852' }}>BREAKOUT</span>
         <span style={{ color: '#ff2d78', fontFamily: "'Courier New', monospace", fontSize: 14, letterSpacing: 1, textShadow: '0 0 8px #ff2d78' }}>BEST {getBest()}</span>
       </div>

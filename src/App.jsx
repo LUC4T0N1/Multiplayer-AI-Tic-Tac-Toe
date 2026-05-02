@@ -12,11 +12,17 @@ const PacmanGame        = lazy(() => import("./components/games/pacman/PacmanGam
 const PacmanFriendLobby = lazy(() => import("./components/games/pacman/PacmanFriendLobby"));
 const PacmanRandomQueue = lazy(() => import("./components/games/pacman/PacmanRandomQueue"));
 const SnakeGame  = lazy(() => import("./components/games/snake/SnakeGame"));
+const SnakeFriendLobby = lazy(() => import("./components/games/snake/SnakeFriendLobby"));
+const SnakeRandomQueue = lazy(() => import("./components/games/snake/SnakeRandomQueue"));
 const BreakoutGame = lazy(() => import("./components/games/breakout/BreakoutGame"));
+const BreakoutFriendLobby = lazy(() => import("./components/games/breakout/BreakoutFriendLobby"));
+const BreakoutRandomQueue = lazy(() => import("./components/games/breakout/BreakoutRandomQueue"));
 const TetrisGame        = lazy(() => import("./components/games/tetris/TetrisGame"));
 const TetrisFriendLobby = lazy(() => import("./components/games/tetris/TetrisFriendLobby"));
 const TetrisRandomQueue = lazy(() => import("./components/games/tetris/TetrisRandomQueue"));
-const InfinityRunGame = lazy(() => import("./components/games/infinityrun/InfinityRunGame"));
+const InfinityRunGame        = lazy(() => import("./components/games/infinityrun/InfinityRunGame"));
+const InfinityRunFriendLobby = lazy(() => import("./components/games/infinityrun/InfinityRunFriendLobby"));
+const InfinityRunRandomQueue = lazy(() => import("./components/games/infinityrun/InfinityRunRandomQueue"));
 const PongGame        = lazy(() => import("./components/games/pong/PongGame"));
 const PongFriendLobby = lazy(() => import("./components/games/pong/PongFriendLobby"));
 const PongRandomQueue = lazy(() => import("./components/games/pong/PongRandomQueue"));
@@ -42,11 +48,17 @@ function App({ socket }) {
             <Route path="/pacman/friend" element={<PacmanFriendLobby socket={socket} />} />
             <Route path="/pacman/random" element={<PacmanRandomQueue socket={socket} />} />
             <Route path="/snake"  element={<SnakeGame />} />
+            <Route path="/snake/friend" element={<SnakeFriendLobby socket={socket} />} />
+            <Route path="/snake/random" element={<SnakeRandomQueue socket={socket} />} />
             <Route path="/breakout" element={<BreakoutGame />} />
+            <Route path="/breakout/friend" element={<BreakoutFriendLobby socket={socket} />} />
+            <Route path="/breakout/random" element={<BreakoutRandomQueue socket={socket} />} />
             <Route path="/tetris"        element={<TetrisGame />} />
             <Route path="/tetris/friend" element={<TetrisFriendLobby socket={socket} />} />
             <Route path="/tetris/random" element={<TetrisRandomQueue socket={socket} />} />
-            <Route path="/infinity-run" element={<InfinityRunGame />} />
+            <Route path="/infinity-run"        element={<InfinityRunGame />} />
+            <Route path="/infinity-run/friend" element={<InfinityRunFriendLobby socket={socket} />} />
+            <Route path="/infinity-run/random" element={<InfinityRunRandomQueue socket={socket} />} />
             <Route path="/pong/friend"      element={<PongFriendLobby socket={socket} />} />
             <Route path="/pong/random"      element={<PongRandomQueue socket={socket} />} />
             <Route path="/pong/:difficulty" element={<PongGame />} />

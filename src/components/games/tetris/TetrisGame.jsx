@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Leaderboard from '../../ui/Leaderboard'; // Importado
+import HomeButton from '../../ui/HomeButton';
 
 const COLS = 10;
 const ROWS = 20;
@@ -508,20 +509,7 @@ export default function TetrisGame() {
   return (
     <div style={{ width: '100vw', height: '100vh', overflow: 'hidden', background: '#040010', position: 'relative' }}>
       <canvas ref={canvasRef} style={{ display: 'block', width: '100%', height: '100%' }} />
-      <button
-        onClick={() => navigate('/')}
-        style={{
-          position: 'fixed', top: 16, left: 20, zIndex: 100,
-          background: 'rgba(4,0,18,0.75)', border: '1.5px solid rgba(0,229,255,0.35)',
-          color: '#00e5ff', fontFamily: "'Orbitron', sans-serif", fontSize: 10,
-          fontWeight: 700, letterSpacing: '0.15em', cursor: 'pointer',
-          padding: '7px 16px', borderRadius: 3, textTransform: 'uppercase',
-          boxShadow: '0 0 10px rgba(0,229,255,0.2)', backdropFilter: 'blur(10px)',
-          transition: 'all 0.15s',
-        }}
-      >
-        ← HOME
-      </button>
+      <HomeButton />
 
       <Leaderboard
         apiUrl={`${process.env.REACT_APP_SERVER_URL}/leaderboard/tetris`}
