@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import isMobile from '../../../utils/isMobile';
 
@@ -65,17 +65,20 @@ function OnlinePacmanGame({ socket, room, opponentName }) {
   const CH = MP_CELL * ROWS;
   const showOppCanvas = !isMobile;
 
-  const myCanvasRef  = useRef(null);
-  const oppCanvasRef = useRef(null);
-  const myStateRef   = useRef(null);
-  const oppStateRef  = useRef(null);
-  const animRef      = useRef(null);
-  const lastTRef     = useRef(0);
-  const resultRef    = useRef(null);
+  const myCanvasRef    = useRef(null);
+  const oppCanvasRef   = useRef(null);
+  const myStateRef     = useRef(null);
+  const oppStateRef    = useRef(null);
+  const animRef        = useRef(null);
+  const lastTRef       = useRef(0);
+  const resultRef      = useRef(null);
+  const myReadyRef     = useRef(false);
+  const oppReadyRef    = useRef(false);
 
-  const [result,  setResult]  = useState(null);
-  const [myUi,   setMyUi]   = useState({ score: 0, lives: 3, level: 1 });
-  const [oppUi,  setOppUi]  = useState({ score: 0, lives: 3 });
+  const [result,         setResult]         = useState(null);
+  const [waitingRestart, setWaitingRestart] = useState(false);
+  const [myUi,           setMyUi]           = useState({ score: 0, lives: 3, level: 1 });
+  const [oppUi,          setOppUi]          = useState({ score: 0, lives: 3 });
 
   function makeMyState(level = 1, score = 0, lives = 3) {
     const cfg  = levelConfig(level);
@@ -133,6 +136,25 @@ function OnlinePacmanGame({ socket, room, opponentName }) {
     };
   }
 
+  const doRestart = useCallback(() => {
+    myReadyRef.current     = false;
+    oppReadyRef.current    = false;
+    resultRef.current      = null;
+    myStateRef.current     = makeMyState(1);
+    oppStateRef.current    = makeOppState();
+    setResult(null);
+    setWaitingRestart(false);
+    setMyUi({ score: 0, lives: 3, level: 1 });
+    setOppUi({ score: 0, lives: 3 });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handlePlayAgain = useCallback(() => {
+    myReadyRef.current = true;
+    setWaitingRestart(true);
+    socket.emit('pacman-restart-ready', { room });
+    if (oppReadyRef.current) doRestart();
+  }, [socket, room, doRestart]);
+
   // Cleanup on unmount
   useEffect(() => () => { socket.emit('pacman-leave', { room }); }, [socket, room]);
 
@@ -157,23 +179,26 @@ function OnlinePacmanGame({ socket, room, opponentName }) {
     };
     const onDot   = ({ row, col }) => { if (oppStateRef.current) oppStateRef.current.maze[row][col] = 0; };
     const onPower = ({ row, col }) => { if (oppStateRef.current) oppStateRef.current.maze[row][col] = 0; };
-    const onOppOver = () => { if (!resultRef.current) { resultRef.current = 'win'; setResult('win'); } };
-    const onOppLeft = () => { if (!resultRef.current) { resultRef.current = 'win'; setResult('win'); } };
+    const onOppOver    = () => { if (!resultRef.current) { resultRef.current = 'win';      setResult('win'); } };
+    const onOppLeft    = () => { if (!resultRef.current) { resultRef.current = 'opp-left'; setResult('opp-left'); } };
+    const onRestartReady = () => { oppReadyRef.current = true; if (myReadyRef.current) doRestart(); };
 
-    socket.on('pacman-state',    onState);
-    socket.on('pacman-dot',      onDot);
-    socket.on('pacman-power',    onPower);
-    socket.on('pacman-opp-over', onOppOver);
-    socket.on('pacman-opp-left', onOppLeft);
+    socket.on('pacman-state',          onState);
+    socket.on('pacman-dot',            onDot);
+    socket.on('pacman-power',          onPower);
+    socket.on('pacman-opp-over',       onOppOver);
+    socket.on('pacman-opp-left',       onOppLeft);
+    socket.on('pacman-restart-ready',  onRestartReady);
 
     return () => {
-      socket.off('pacman-state',    onState);
-      socket.off('pacman-dot',      onDot);
-      socket.off('pacman-power',    onPower);
-      socket.off('pacman-opp-over', onOppOver);
-      socket.off('pacman-opp-left', onOppLeft);
+      socket.off('pacman-state',         onState);
+      socket.off('pacman-dot',           onDot);
+      socket.off('pacman-power',         onPower);
+      socket.off('pacman-opp-over',      onOppOver);
+      socket.off('pacman-opp-left',      onOppLeft);
+      socket.off('pacman-restart-ready', onRestartReady);
     };
-  }, [socket]);
+  }, [socket, doRestart]);
 
   // Keyboard controls
   useEffect(() => {
@@ -432,21 +457,6 @@ function OnlinePacmanGame({ socket, room, opponentName }) {
       }
     }
 
-    function drawResultOverlay(ctx, res, C) {
-      const won = res === 'win';
-      const col = won ? '#00ffcc' : '#ff2d78';
-      ctx.save();
-      ctx.globalAlpha = 0.72; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, C * COLS, C * ROWS); ctx.globalAlpha = 1;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.shadowColor = col; ctx.shadowBlur = 40; ctx.fillStyle = col;
-      ctx.font = `bold ${Math.round(C * 1.2)}px Orbitron, sans-serif`;
-      ctx.fillText(won ? 'YOU WIN!' : 'YOU LOSE', C * COLS / 2, C * ROWS / 2 - C * 1.2);
-      ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(255,255,255,0.45)';
-      ctx.font = `${Math.round(C * 0.55)}px Orbitron, sans-serif`;
-      ctx.fillText('← BACK TO MENU', C * COLS / 2, C * ROWS / 2 + C * 0.6);
-      ctx.restore();
-    }
-
     function resetPositions(s) {
       const pm = s.pacman;
       pm.x = 10; pm.y = 16; pm.prevX = 10; pm.prevY = 16;
@@ -556,7 +566,6 @@ function OnlinePacmanGame({ socket, room, opponentName }) {
       // Draw
       draw(myCtx, s, ts, C);
       if (oppCtx) draw(oppCtx, oppStateRef.current, ts, C);
-      if (resultRef.current) drawResultOverlay(myCtx, resultRef.current, C);
 
       animRef.current = requestAnimationFrame(tick);
     }
@@ -567,6 +576,8 @@ function OnlinePacmanGame({ socket, room, opponentName }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const resultColor = result === 'win' ? '#00ffcc' : result === 'lose' ? '#ff2d78' : '#ff8c00';
+
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#050010', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
       {/* scanlines */}
@@ -576,6 +587,86 @@ function OnlinePacmanGame({ socket, room, opponentName }) {
         onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.85)'}
         onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.35)'}
       >← BACK</Link>
+
+      {/* Full-screen result overlay */}
+      {result && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 50,
+          background: 'rgba(2,0,16,0.93)',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', gap: 28,
+        }}>
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', backgroundImage: 'linear-gradient(rgba(0,0,0,0.055) 50%, transparent 50%)', backgroundSize: '100% 4px' }} />
+
+          {/* Result title */}
+          <div style={{
+            fontFamily: "'Orbitron', sans-serif", fontWeight: 900,
+            fontSize: 'clamp(28px, 6vw, 68px)',
+            color: resultColor, letterSpacing: '0.1em', textTransform: 'uppercase',
+            textShadow: `0 0 40px ${resultColor}, 0 0 80px ${resultColor}55`,
+            zIndex: 1,
+          }}>
+            {result === 'win' ? 'YOU WIN!' : result === 'lose' ? 'YOU LOSE' : 'OPPONENT LEFT'}
+          </div>
+
+          {/* Score comparison */}
+          <div style={{ display: 'flex', gap: 52, zIndex: 1 }}>
+            {[
+              { label: 'YOU',                      color: '#ffe066', score: myUi.score  },
+              { label: opponentName || 'OPPONENT', color: '#cc00ff', score: oppUi.score },
+            ].map(({ label, color, score }) => (
+              <div key={label} style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ fontFamily: "'Orbitron', sans-serif", fontSize: 10, letterSpacing: '0.25em', color, textTransform: 'uppercase' }}>
+                  {label}
+                </div>
+                <div style={{ fontFamily: "'VT323', monospace", fontSize: 52, color: '#fff', lineHeight: 1 }}>
+                  {score}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Play again / waiting */}
+          {result !== 'opp-left' && (
+            <div style={{ zIndex: 1 }}>
+              {waitingRestart ? (
+                <div style={{
+                  fontFamily: "'Orbitron', sans-serif", fontSize: 11,
+                  color: 'rgba(255,255,255,0.38)', letterSpacing: '0.2em', textTransform: 'uppercase',
+                }}>
+                  WAITING FOR {(opponentName || 'OPPONENT').toUpperCase()}…
+                </div>
+              ) : (
+                <button
+                  onClick={handlePlayAgain}
+                  style={{
+                    background: 'rgba(4,0,18,0.65)', border: '2px solid #cc00ff',
+                    borderRadius: 3, color: '#cc00ff',
+                    fontFamily: "'Orbitron', sans-serif", fontSize: 14, fontWeight: 700,
+                    letterSpacing: '0.12em', cursor: 'pointer', padding: '14px 48px',
+                    textTransform: 'uppercase', boxShadow: '0 0 18px #cc00ff44',
+                    transition: 'all 0.16s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = '#cc00ff18'; e.currentTarget.style.color = '#fff'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(4,0,18,0.65)'; e.currentTarget.style.color = '#cc00ff'; }}
+                >
+                  PLAY AGAIN
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Back to menu */}
+          <Link to="/" style={{
+            zIndex: 1, fontFamily: "'Orbitron', sans-serif", fontSize: 10,
+            letterSpacing: '0.18em', color: 'rgba(255,255,255,0.32)',
+            textDecoration: 'none', textTransform: 'uppercase', marginTop: 4,
+          }}
+            onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.75)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.32)'}
+          >← BACK TO MENU</Link>
+        </div>
+      )}
 
       <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: 'flex-start', gap: isMobile ? 12 : 20 }}>
 

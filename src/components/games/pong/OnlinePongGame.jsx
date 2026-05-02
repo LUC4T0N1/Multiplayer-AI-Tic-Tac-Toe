@@ -14,11 +14,15 @@ const COUNTDOWN_SEC = 1.8;
 const PLAYER_SPD = 7.5;
 const MAX_BOUNCE_ANGLE = Math.PI / 3;
 
+// Right edge of left paddle / left edge of right paddle
+const P_RIGHT = PAD_MARGIN + PAD_W;        // 42
+const A_LEFT  = LW - PAD_MARGIN - PAD_W;   // 758
+
 function newBall(dir) {
   const angle = Math.PI / 9 + Math.random() * (Math.PI / 6);
   const ys = Math.random() < 0.5 ? 1 : -1;
   return {
-    x: LW / 2, y: LH / 2, prevX: LW / 2,
+    x: LW / 2, y: LH / 2,
     vx: INIT_SPEED * dir * Math.cos(angle),
     vy: INIT_SPEED * ys  * Math.sin(angle),
     spd: INIT_SPEED, hits: 0,
@@ -36,17 +40,32 @@ function initState() {
   };
 }
 
+function applyBounce(b, padY, dir /* +1 left paddle, -1 right paddle */) {
+  b.hits++;
+  b.spd = Math.min(MAX_SPEED, INIT_SPEED + b.hits * SPD_PER_HIT);
+  const rel = Math.max(-1, Math.min(1, (b.y - (padY + PAD_H / 2)) / (PAD_H / 2)));
+  b.vx = dir * Math.cos(rel * MAX_BOUNCE_ANGLE) * b.spd;
+  b.vy =       Math.sin(rel * MAX_BOUNCE_ANGLE) * b.spd;
+}
+
 function OnlinePongGame({ socket, room, side, opponentName }) {
   const isHost = side === 'left';
 
-  const canvasRef   = useRef(null);
-  const stateRef    = useRef(null);
-  const animRef     = useRef(null);
-  const lastTRef    = useRef(0);
-  const inputRef    = useRef({ up: false, down: false, touchY: null });
-  const myReadyRef  = useRef(false);
-  const oppReadyRef = useRef(false);
-  const oppLeftRef  = useRef(false);
+  const canvasRef         = useRef(null);
+  const stateRef          = useRef(null);
+  const animRef           = useRef(null);
+  const lastTRef          = useRef(0);
+  const inputRef          = useRef({ up: false, down: false, touchY: null });
+  const myReadyRef        = useRef(false);
+  const oppReadyRef       = useRef(false);
+  const oppLeftRef        = useRef(false);
+
+  // Network sync refs
+  const remoteBallRef     = useRef(null);          // guest: {x,y,vx,vy,spd,hits,ts}
+  const remoteOppPadRef   = useRef(null);          // both: latest received opponent Y
+  const oppPadVisualRef   = useRef((LH - PAD_H) / 2); // host: smoothed guest paddle
+  // Guest-side collision authority
+  const guestHitSentRef   = useRef(false);         // prevent double-emit per approach
 
   const scale = isMobile
     ? Math.min((window.innerWidth * 0.98) / LW, (window.innerHeight * 0.78) / LH)
@@ -59,18 +78,19 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
   });
 
   const doRestart = useCallback(() => {
-    myReadyRef.current  = false;
-    oppReadyRef.current = false;
+    myReadyRef.current      = false;
+    oppReadyRef.current     = false;
+    remoteBallRef.current   = null;
+    guestHitSentRef.current = false;
+    oppPadVisualRef.current = (LH - PAD_H) / 2;
     stateRef.current = initState();
     setUi({ pScore: 0, aScore: 0, phase: 'countdown', winner: null, oppLeft: false });
   }, []);
 
-  // Cleanup: notify server when leaving
   useEffect(() => {
     return () => { socket.emit('pong-leave', { room }); };
   }, [socket, room]);
 
-  // Keyboard
   useEffect(() => {
     const onDown = (e) => {
       if (['ArrowUp', 'w', 'W'].includes(e.key))   { e.preventDefault(); inputRef.current.up   = true; }
@@ -90,7 +110,6 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
     return () => { window.removeEventListener('keydown', onDown); window.removeEventListener('keyup', onUp); };
   }, [socket, room, doRestart]);
 
-  // Touch
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -116,17 +135,28 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
     };
   }, [scale, socket, room, doRestart]);
 
-  // Socket events
   useEffect(() => {
-    const onPaddle = ({ y }) => {
-      const s = stateRef.current;
-      if (!s) return;
-      if (isHost) s.aY = y; else s.pY = y;
+    const onPaddle = ({ y }) => { remoteOppPadRef.current = y; };
+
+    // Guest receives ball state from host (with spd/hits for consistent bounces)
+    const onBall = ({ x, y, vx, vy, spd, hits }) => {
+      remoteBallRef.current = { x, y, vx, vy, spd: spd ?? INIT_SPEED, hits: hits ?? 0, ts: performance.now() };
     };
-    const onBall = ({ x, y, vx, vy }) => {
+
+    // Host receives collision report from guest — guest knows EXACTLY where its paddle is
+    const onHit = ({ paddleY, hitY }) => {
       const s = stateRef.current;
-      if (s) Object.assign(s.ball, { x, y, vx, vy });
+      if (!s || s.phase !== 'playing') return;
+      const b = s.ball;
+      // Only apply if ball is still heading right and within plausible range
+      if (b.vx <= 0) return;
+      b.x = A_LEFT - BALL_R - 0.5;
+      b.y = hitY;
+      applyBounce(b, paddleY, -1);
+      // Force-send the corrected state to guest immediately
+      socket.emit('pong-ball', { room, x: b.x, y: b.y, vx: b.vx, vy: b.vy, spd: b.spd, hits: b.hits });
     };
+
     const onPoint = ({ leftScore, rightScore }) => {
       const s = stateRef.current;
       if (!s) return;
@@ -134,9 +164,10 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
       if      (leftScore  >= WIN_SCORE) { s.phase = 'gameover'; s.winner = 'player'; }
       else if (rightScore >= WIN_SCORE) { s.phase = 'gameover'; s.winner = 'ai'; }
       else {
-        // ball direction: serve toward the side that just lost
         const dir = rightScore > leftScore ? -1 : 1;
         s.ball = newBall(dir);
+        remoteBallRef.current   = null;
+        guestHitSentRef.current = false;
         s.phase = 'countdown'; s.cdown = COUNTDOWN_SEC;
       }
       setUi({ pScore: s.pScore, aScore: s.aScore, phase: s.phase, winner: s.winner, oppLeft: false });
@@ -148,38 +179,37 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
     const onOppLeft = () => { oppLeftRef.current = true; setUi(u => ({ ...u, oppLeft: true })); };
 
     socket.on('pong-paddle', onPaddle);
-    if (!isHost) {
+    socket.on('pong-restart-ready', onRestartReady);
+    socket.on('pong-opponent-left', onOppLeft);
+    if (isHost) {
+      socket.on('pong-hit', onHit);
+    } else {
       socket.on('pong-ball',  onBall);
       socket.on('pong-point', onPoint);
     }
-    socket.on('pong-restart-ready', onRestartReady);
-    socket.on('pong-opponent-left', onOppLeft);
 
     return () => {
       socket.off('pong-paddle', onPaddle);
-      socket.off('pong-ball',   onBall);
-      socket.off('pong-point',  onPoint);
+      socket.off('pong-hit',   onHit);
+      socket.off('pong-ball',  onBall);
+      socket.off('pong-point', onPoint);
       socket.off('pong-restart-ready', onRestartReady);
       socket.off('pong-opponent-left', onOppLeft);
     };
-  }, [socket, isHost, doRestart]);
+  }, [socket, isHost, doRestart, room]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Game loop
+  // ── Game loop ────────────────────────────────────────────────────────────────
   useEffect(() => {
     stateRef.current = initState();
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
-    // ── Draw helpers ──────────────────────────────────────────────────────────
     function rr(x, y, w, h, r) {
       ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.arcTo(x + w, y, x + w, y + h, r);
-      ctx.arcTo(x + w, y + h, x, y + h, r);
-      ctx.arcTo(x, y + h, x, y, r);
-      ctx.arcTo(x, y, x + w, y, r);
-      ctx.closePath();
+      ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
     }
 
     function drawBg(tick) {
@@ -188,13 +218,13 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
       g.addColorStop(0.65, '#320050'); g.addColorStop(1, '#100022');
       ctx.fillStyle = g; ctx.fillRect(0, 0, LW, LH);
       const S = [11,37,71,113,157,199,241,293,337,401,457,509,563,617,673,743,811,877,941,1009];
-      S.forEach((s, i) => {
-        const sx = (s * 53 + i * 180) % LW, sy = (s * 19 + i * 42) % (LH * 0.72);
-        const sr = s % 3 === 0 ? 1.4 : 0.75;
+      S.forEach((sv, i) => {
+        const sx = (sv * 53 + i * 180) % LW, sy = (sv * 19 + i * 42) % (LH * 0.72);
+        const sr = sv % 3 === 0 ? 1.4 : 0.75;
         ctx.save();
-        ctx.globalAlpha = 0.35 + 0.55 * Math.abs(Math.sin(tick * 0.012 + s * 0.3));
-        ctx.fillStyle = s % 7 === 0 ? '#e0c8ff' : '#fff';
-        if (s % 7 === 0) { ctx.shadowColor = '#e0c8ff'; ctx.shadowBlur = 5; }
+        ctx.globalAlpha = 0.35 + 0.55 * Math.abs(Math.sin(tick * 0.012 + sv * 0.3));
+        ctx.fillStyle = sv % 7 === 0 ? '#e0c8ff' : '#fff';
+        if (sv % 7 === 0) { ctx.shadowColor = '#e0c8ff'; ctx.shadowBlur = 5; }
         ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
       });
@@ -209,16 +239,14 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
       sg.addColorStop(0.55, '#ff1122'); sg.addColorStop(1, '#990044');
       ctx.fillStyle = sg; ctx.fillRect(cx - cr, cy - cr, cr * 2, cr * 2);
       for (let i = 0; i < 8; i++) {
-        const ly = cy + (i / 8) * cr * 0.92;
         ctx.fillStyle = `rgba(4,0,10,${0.30 + i * 0.055})`;
-        ctx.fillRect(cx - cr, ly, cr * 2, 5 + i * 0.4);
+        ctx.fillRect(cx - cr, cy + (i / 8) * cr * 0.92, cr * 2, 5 + i * 0.4);
       }
       ctx.restore();
     }
 
     function drawGrid() {
-      const gy = LH * 0.60;
-      ctx.save();
+      const gy = LH * 0.60; ctx.save();
       for (let i = 0; i < 6; i++) {
         const t = (i + 1) / 6, y = gy + (LH - gy) * t;
         ctx.strokeStyle = `rgba(0,60,200,${0.10 + t * 0.35})`;
@@ -234,8 +262,7 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
       }
       const hg = ctx.createLinearGradient(0, gy - 10, 0, gy + 10);
       hg.addColorStop(0, 'transparent'); hg.addColorStop(0.5, 'rgba(100,0,200,0.20)'); hg.addColorStop(1, 'transparent');
-      ctx.fillStyle = hg; ctx.fillRect(0, gy - 10, LW, 20);
-      ctx.restore();
+      ctx.fillStyle = hg; ctx.fillRect(0, gy - 10, LW, 20); ctx.restore();
     }
 
     function drawCenterLine() {
@@ -271,33 +298,24 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
     }
 
     function drawScores(pScore, aScore, leftLabel, rightLabel) {
-      ctx.save();
-      ctx.textBaseline = 'top';
+      ctx.save(); ctx.textBaseline = 'top';
       ctx.font = "11px 'Orbitron', sans-serif";
-      ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(0,229,255,0.45)';
-      ctx.fillText(leftLabel, LW / 2 - 14, 12);
-      ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(255,45,120,0.45)';
-      ctx.fillText(rightLabel, LW / 2 + 14, 12);
+      ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(0,229,255,0.45)'; ctx.fillText(leftLabel, LW / 2 - 14, 12);
+      ctx.textAlign = 'left';  ctx.fillStyle = 'rgba(255,45,120,0.45)'; ctx.fillText(rightLabel, LW / 2 + 14, 12);
       ctx.font = "72px 'VT323', monospace";
-      ctx.textAlign = 'right'; ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 22; ctx.fillStyle = '#00e5ff';
-      ctx.fillText(pScore, LW / 2 - 10, 24);
-      ctx.textAlign = 'left'; ctx.shadowColor = '#ff2d78'; ctx.shadowBlur = 22; ctx.fillStyle = '#ff2d78';
-      ctx.fillText(aScore, LW / 2 + 10, 24);
+      ctx.textAlign = 'right'; ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 22; ctx.fillStyle = '#00e5ff'; ctx.fillText(pScore, LW / 2 - 10, 24);
+      ctx.textAlign = 'left';  ctx.shadowColor = '#ff2d78'; ctx.shadowBlur = 22; ctx.fillStyle = '#ff2d78'; ctx.fillText(aScore, LW / 2 + 10, 24);
       ctx.font = "9px 'Orbitron', sans-serif"; ctx.textAlign = 'center'; ctx.shadowBlur = 0;
-      ctx.fillStyle = 'rgba(255,255,255,0.20)';
-      ctx.fillText(`FIRST TO ${WIN_SCORE}`, LW / 2, 100);
+      ctx.fillStyle = 'rgba(255,255,255,0.20)'; ctx.fillText(`FIRST TO ${WIN_SCORE}`, LW / 2, 100);
       ctx.restore();
     }
 
     function drawCountdown(cdown) {
-      const num = Math.ceil(cdown), pulse = cdown % 1;
       ctx.save();
-      ctx.globalAlpha = Math.min(1, 0.35 + pulse * 0.65);
-      ctx.font = "bold 88px 'VT323', monospace";
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.globalAlpha = Math.min(1, 0.35 + (cdown % 1) * 0.65);
+      ctx.font = "bold 88px 'VT323', monospace"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.shadowColor = '#00e5ff'; ctx.shadowBlur = 28; ctx.fillStyle = '#00e5ff';
-      ctx.fillText(num, LW / 2, LH / 2 + 50);
-      ctx.restore();
+      ctx.fillText(Math.ceil(cdown), LW / 2, LH / 2 + 50); ctx.restore();
     }
 
     function drawGameOver(winner, wonMsg, lostMsg) {
@@ -306,11 +324,9 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
       const iWon = isHost ? winner === 'player' : winner === 'ai';
       const col  = iWon ? '#00ffcc' : '#ff2d78';
       ctx.shadowColor = col; ctx.shadowBlur = 50;
-      ctx.font = "bold 68px 'Orbitron', sans-serif";
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col;
+      ctx.font = "bold 68px 'Orbitron', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = col;
       ctx.fillText(iWon ? wonMsg : lostMsg, LW / 2, LH / 2 - 30);
-      ctx.shadowBlur = 0; ctx.font = "13px 'Orbitron', sans-serif";
-      ctx.fillStyle = 'rgba(255,255,255,0.50)';
+      ctx.shadowBlur = 0; ctx.font = "13px 'Orbitron', sans-serif"; ctx.fillStyle = 'rgba(255,255,255,0.50)';
       ctx.fillText(isMobile ? 'TAP TO PLAY AGAIN' : 'PRESS SPACE TO PLAY AGAIN', LW / 2, LH / 2 + 28);
       ctx.restore();
     }
@@ -318,14 +334,11 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
     function drawOppLeft() {
       ctx.save();
       ctx.globalAlpha = 0.72; ctx.fillStyle = '#000'; ctx.fillRect(0, 0, LW, LH); ctx.globalAlpha = 1;
-      ctx.font = "bold 48px 'Orbitron', sans-serif";
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = "bold 48px 'Orbitron', sans-serif"; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.shadowColor = '#ff8c00'; ctx.shadowBlur = 40; ctx.fillStyle = '#ff8c00';
       ctx.fillText('OPPONENT LEFT', LW / 2, LH / 2 - 24);
-      ctx.shadowBlur = 0; ctx.font = "13px 'Orbitron', sans-serif";
-      ctx.fillStyle = 'rgba(255,255,255,0.45)';
-      ctx.fillText('RETURN TO MENU', LW / 2, LH / 2 + 28);
-      ctx.restore();
+      ctx.shadowBlur = 0; ctx.font = "13px 'Orbitron', sans-serif"; ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.fillText('RETURN TO MENU', LW / 2, LH / 2 + 28); ctx.restore();
     }
 
     function drawScanlines() {
@@ -334,17 +347,27 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
       ctx.restore();
     }
 
-    // ── Update ──────────────────────────────────────────────────────────────
+    // ── Update ─────────────────────────────────────────────────────────────────
     const myPaddle  = isHost ? 'pY' : 'aY';
     const leftLabel  = isHost ? 'YOU' : (opponentName || 'OPP');
     const rightLabel = isHost ? (opponentName || 'OPP') : 'YOU';
     const wonMsg  = 'YOU WIN!';
     const lostMsg = `${opponentName || 'OPP'} WINS`;
 
+    // Opponent paddle tracks at 2× player speed so it visually catches up fast
+    // without ever looking "teleport-y". On large gaps (e.g. first frame) we snap.
+    function smoothPad(current, target, dt) {
+      const diff = target - current;
+      if (Math.abs(diff) > 120) return target; // snap on big gaps
+      const maxStep = PLAYER_SPD * dt * 60 * 2.2;
+      return current + Math.max(-maxStep, Math.min(maxStep, diff));
+    }
+
     function update(dt, s) {
       const dt_60 = dt * 60;
       s.tick++;
 
+      // ── Own paddle ──
       const inp = inputRef.current;
       if (inp.touchY !== null) {
         s[myPaddle] = Math.max(0, Math.min(LH - PAD_H, inp.touchY - PAD_H / 2));
@@ -353,7 +376,7 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
         if (inp.down) s[myPaddle] = Math.min(LH - PAD_H, s[myPaddle] + PLAYER_SPD * dt_60);
       }
 
-      // Emit my paddle every frame
+      // Emit own paddle every frame — low bandwidth (~30 bytes), minimises lag on opponent's screen
       socket.emit('pong-paddle', { room, y: s[myPaddle] });
 
       if (s.phase === 'gameover') return;
@@ -361,47 +384,127 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
       if (s.phase === 'countdown') {
         s.cdown -= dt;
         if (s.cdown <= 0) s.phase = 'playing';
-        if (isHost) socket.emit('pong-ball', { room, x: s.ball.x, y: s.ball.y, vx: s.ball.vx, vy: s.ball.vy });
+        if (isHost) socket.emit('pong-ball', { room, x: s.ball.x, y: s.ball.y, vx: s.ball.vx, vy: s.ball.vy, spd: s.ball.spd, hits: s.ball.hits });
         return;
       }
 
-      if (!isHost) return; // guest only moves its own paddle; ball comes from host
+      // ── Guest update ────────────────────────────────────────────────────────
+      if (!isHost) {
+        // Smooth opponent (host/left) paddle
+        if (remoteOppPadRef.current !== null)
+          s.pY = smoothPad(s.pY, remoteOppPadRef.current, dt);
 
-      // ── Host: ball physics ──
-      const b = s.ball;
-      b.prevX = b.x;
-      b.x += b.vx * dt_60;
-      b.y += b.vy * dt_60;
+        // Dead-reckoning: extrapolate from last received ball state
+        const rb = remoteBallRef.current;
+        if (rb) {
+          const age  = Math.min((performance.now() - rb.ts) * 0.001, 0.12);
+          let extX = rb.x + rb.vx * age * 60;
+          let extY = rb.y + rb.vy * age * 60;
+          // Approximate Y wall reflections during extrapolation
+          if (extY - BALL_R < 0)   extY = -(extY - BALL_R) + BALL_R;
+          if (extY + BALL_R > LH)  extY = 2 * (LH - BALL_R) - (extY + BALL_R);
+          extX = Math.max(BALL_R, Math.min(LW - BALL_R, extX));
+          extY = Math.max(BALL_R, Math.min(LH - BALL_R, extY));
+          const dx = extX - s.ball.x, dy = extY - s.ball.y;
+          // Lerp — snap if very far off (point just reset, etc.)
+          const k = (dx * dx + dy * dy) > 5000 ? 0.7 : 0.25;
+          s.ball.x += dx * k;
+          s.ball.y += dy * k;
+          s.ball.vx = rb.vx; s.ball.vy = rb.vy;
+          s.ball.spd = rb.spd; s.ball.hits = rb.hits;
+        }
 
-      if (b.y - BALL_R <= 0)  { b.y = BALL_R;      b.vy =  Math.abs(b.vy); }
-      if (b.y + BALL_R >= LH) { b.y = LH - BALL_R; b.vy = -Math.abs(b.vy); }
-
-      // Left paddle (host's paddle)
-      const pRight = PAD_MARGIN + PAD_W;
-      if (b.vx < 0 && b.prevX - BALL_R >= pRight && b.x - BALL_R < pRight
-          && b.y >= s.pY - BALL_R * 0.4 && b.y <= s.pY + PAD_H + BALL_R * 0.4) {
-        b.x = pRight + BALL_R; b.hits++;
-        b.spd = Math.min(MAX_SPEED, INIT_SPEED + b.hits * SPD_PER_HIT);
-        const rel = (b.y - (s.pY + PAD_H / 2)) / (PAD_H / 2);
-        b.vx =  Math.cos(rel * MAX_BOUNCE_ANGLE) * b.spd;
-        b.vy =  Math.sin(rel * MAX_BOUNCE_ANGLE) * b.spd;
+        // ── Guest-authoritative collision on own (right) paddle ──────────────
+        // The guest knows exactly where its paddle is; the host doesn't due to lag.
+        // When the ball reaches the paddle face, tell the host.
+        const b = s.ball;
+        if (b.vx > 0) {
+          if (b.x + BALL_R >= A_LEFT && !guestHitSentRef.current) {
+            if (b.y >= s.aY - BALL_R && b.y <= s.aY + PAD_H + BALL_R) {
+              // HIT — report to host and apply locally
+              guestHitSentRef.current = true;
+              const hitY = Math.max(s.aY, Math.min(s.aY + PAD_H, b.y));
+              socket.emit('pong-hit', { room, paddleY: s.aY, hitY });
+              b.x = A_LEFT - BALL_R - 0.5;
+              b.y = hitY;
+              applyBounce(b, s.aY, -1);
+              // Overwrite the remote ref so dead-reckoning uses the new velocity
+              remoteBallRef.current = { x: b.x, y: b.y, vx: b.vx, vy: b.vy, spd: b.spd, hits: b.hits, ts: performance.now() };
+            }
+          }
+        } else {
+          guestHitSentRef.current = false; // reset for next approach
+        }
+        return;
       }
 
-      // Right paddle (guest's paddle)
-      const aLeft = LW - PAD_MARGIN - PAD_W;
-      if (b.vx > 0 && b.prevX + BALL_R <= aLeft && b.x + BALL_R > aLeft
-          && b.y >= s.aY - BALL_R * 0.4 && b.y <= s.aY + PAD_H + BALL_R * 0.4) {
-        b.x = aLeft - BALL_R; b.hits++;
-        b.spd = Math.min(MAX_SPEED, INIT_SPEED + b.hits * SPD_PER_HIT);
-        const rel = (b.y - (s.aY + PAD_H / 2)) / (PAD_H / 2);
-        b.vx = -Math.cos(rel * MAX_BOUNCE_ANGLE) * b.spd;
-        b.vy =  Math.sin(rel * MAX_BOUNCE_ANGLE) * b.spd;
+      // ── Host: authoritative ball physics ─────────────────────────────────────
+      // Snap physics paddle from latest received value (emit-every-frame means it's fresh)
+      if (remoteOppPadRef.current !== null) s.aY = remoteOppPadRef.current;
+      // Visual smoothing for rendering the guest paddle on host's screen
+      oppPadVisualRef.current = smoothPad(oppPadVisualRef.current, s.aY, dt);
+
+      const b   = s.ball;
+      const dvx = b.vx * dt_60;
+      const dvy = b.vy * dt_60;
+
+      let newX = b.x + dvx;
+      let newY = b.y + dvy;
+
+      // Y walls
+      if (newY - BALL_R <= 0)  { newY = BALL_R;      b.vy =  Math.abs(b.vy); }
+      if (newY + BALL_R >= LH) { newY = LH - BALL_R; b.vy = -Math.abs(b.vy); }
+
+      // ── CCD collision — left paddle (host's own) ──────────────────────────
+      // Uses ball start position so hitY is evaluated at the EXACT crossing instant.
+      let collided = false;
+      if (!collided && b.vx < 0 && b.x - BALL_R > P_RIGHT - 1) {
+        const denom = -dvx;
+        if (denom > 0.001) {
+          const t = (b.x - BALL_R - P_RIGHT) / denom;
+          if (t >= 0 && t <= 1.1) {
+            const hitY = b.y + dvy * t;
+            if (hitY >= s.pY - BALL_R && hitY <= s.pY + PAD_H + BALL_R) {
+              newX = P_RIGHT + BALL_R + 0.5;
+              newY = Math.max(s.pY, Math.min(s.pY + PAD_H, hitY));
+              b.y  = newY;
+              applyBounce(b, s.pY, +1);
+              collided = true;
+            }
+          }
+        }
       }
 
-      socket.emit('pong-ball', { room, x: b.x, y: b.y, vx: b.vx, vy: b.vy });
+      // ── CCD collision — right paddle (guest's), fallback only ────────────
+      // Guest's pong-hit is authoritative; this fires only if pong-hit didn't arrive in time.
+      if (!collided && b.vx > 0 && b.x + BALL_R < A_LEFT + 1) {
+        const denom = dvx;
+        if (denom > 0.001) {
+          const t = (A_LEFT - (b.x + BALL_R)) / denom;
+          if (t >= 0 && t <= 1.1) {
+            const hitY = b.y + dvy * t;
+            // Moderate tolerance: covers ~1.5 frames of max paddle movement
+            const tol = BALL_R + PLAYER_SPD * 1.5;
+            if (hitY >= s.aY - tol && hitY <= s.aY + PAD_H + tol) {
+              newX = A_LEFT - BALL_R - 0.5;
+              newY = Math.max(s.aY, Math.min(s.aY + PAD_H, hitY));
+              b.y  = newY;
+              applyBounce(b, s.aY, -1);
+              collided = true;
+            }
+          }
+        }
+      }
 
-      // Scoring
-      if (b.x - BALL_R < 0) {
+      b.x = newX;
+      b.y = newY;
+
+      // Emit ball every frame — guest extrapolates between packets anyway,
+      // but more frequent = less extrapolation error near bounces.
+      socket.emit('pong-ball', { room, x: b.x, y: b.y, vx: b.vx, vy: b.vy, spd: b.spd, hits: b.hits });
+
+      // ── Scoring ──
+      if (b.x - BALL_R <= 0) {
         s.aScore++;
         if (s.aScore >= WIN_SCORE) { s.phase = 'gameover'; s.winner = 'ai'; }
         else { s.ball = newBall(-1); s.phase = 'countdown'; s.cdown = COUNTDOWN_SEC; }
@@ -409,7 +512,7 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
         setUi({ pScore: s.pScore, aScore: s.aScore, phase: s.phase, winner: s.winner, oppLeft: false });
         return;
       }
-      if (b.x + BALL_R > LW) {
+      if (b.x + BALL_R >= LW) {
         s.pScore++;
         if (s.pScore >= WIN_SCORE) { s.phase = 'gameover'; s.winner = 'player'; }
         else { s.ball = newBall(1); s.phase = 'countdown'; s.cdown = COUNTDOWN_SEC; }
@@ -425,7 +528,10 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
       drawGrid();
       drawCenterLine();
       drawPaddle(PAD_MARGIN, s.pY, '#00e5ff');
-      drawPaddle(LW - PAD_MARGIN - PAD_W, s.aY, '#ff2d78');
+      // Host: render guest paddle at the smoothed visual position (not raw physics value)
+      // Guest: render own paddle directly, opponent paddle already smoothed via smoothPad()
+      const rightY = isHost ? oppPadVisualRef.current : s.aY;
+      drawPaddle(LW - PAD_MARGIN - PAD_W, rightY, '#ff2d78');
       if (s.phase !== 'gameover') drawBall(s.ball, s.tick);
       drawScores(s.pScore, s.aScore, leftLabel, rightLabel);
       if (s.phase === 'countdown') drawCountdown(s.cdown);
@@ -448,7 +554,7 @@ function OnlinePongGame({ socket, room, side, opponentName }) {
     }
 
     lastTRef.current = performance.now();
-    animRef.current = requestAnimationFrame(tick);
+    animRef.current  = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animRef.current);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

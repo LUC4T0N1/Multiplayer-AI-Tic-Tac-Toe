@@ -388,6 +388,20 @@ function Home({ socket }) {
     };
   }, []);
 
+  const pongScreens   = ['pong', 'pong-single', 'pong-multi'];
+  const pacmanScreens = ['pacman', 'pacman-multi'];
+  const tetrisScreens = ['tetris', 'tetris-multi'];
+  const screenIcon  = screen === 'games' ? '◈ ◈ ◈'
+    : pongScreens.includes(screen)   ? '◉ · ◉'
+    : pacmanScreens.includes(screen) ? '· · ·'
+    : tetrisScreens.includes(screen) ? '▪ ▪ ▪'
+    : '✕ ○ ✕';
+  const screenTitle = screen === 'games' ? 'ARCADE'
+    : pongScreens.includes(screen)   ? 'PONG'
+    : pacmanScreens.includes(screen) ? 'PACMAN'
+    : tetrisScreens.includes(screen) ? 'TETRIS'
+    : t('tictactoe');
+
   const backBtnStyle = {
     background: 'none', border: 'none', color: 'rgba(255,255,255,0.32)',
     fontFamily: "'Orbitron', sans-serif", fontSize: 10, letterSpacing: '0.15em',
@@ -449,14 +463,14 @@ function Home({ socket }) {
             fontFamily: "'VT323', monospace", fontSize: 28, color: '#ff2d78',
             letterSpacing: '0.7em', textShadow: '0 0 16px #ff2d78, 0 0 32px #ff2d7855',
             marginBottom: 10, opacity: 0.82,
-          }}>{screen === 'games' ? '◈ ◈ ◈' : '✕ ○ ✕'}</div>
+          }}>{screenIcon}</div>
           <h1 style={{
             fontFamily: "'Orbitron', sans-serif",
             fontSize: 'clamp(26px, 5.5vw, 62px)',
             fontWeight: 900, letterSpacing: '0.12em', color: '#fff',
             animation: 'logoIn 1s cubic-bezier(.22,1,.36,1) both, glowPulse 3.2s 1s ease-in-out infinite',
             lineHeight: 1.1, textTransform: 'uppercase', margin: 0,
-          }}>{screen === 'games' ? 'ARCADE' : t('tictactoe')}</h1>
+          }}>{screenTitle}</h1>
           <div style={{
             height: 3, width: '74%', margin: '14px auto 0',
             background: 'linear-gradient(90deg, transparent, #ff2d78, #cc00ff, #00e5ff, transparent)',
@@ -488,7 +502,7 @@ function Home({ socket }) {
               <NeonButton color="#ffb852" size="lg" to="/breakout" delay={0.40}>
                 BREAKOUT
               </NeonButton>
-              <NeonButton color="#ff2d78" size="lg" to="/tetris" delay={0.50}>
+              <NeonButton color="#ff2d78" size="lg" onClick={() => setScreen('tetris')} delay={0.50}>
                 TETRIS
               </NeonButton>
               <NeonButton color="#00b4ff" size="lg" to="/infinity-run" delay={0.60}>
@@ -508,6 +522,12 @@ function Home({ socket }) {
               <NeonButton color="#00e5ff" size="lg" onClick={() => setScreen('single')} delay={0.20}>
                 {t('singleplayer')}
               </NeonButton>
+              <button
+                onClick={() => setScreen('games')}
+                style={backBtnStyle}
+                onMouseEnter={e => e.currentTarget.style.color = 'rgba(188, 222, 241, 0.85)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.32)'}
+              >{t('back')}</button>
             </div>
           )}
 
@@ -529,10 +549,10 @@ function Home({ socket }) {
           {screen === 'pong' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18, animation: 'fadeUp 0.4s both' }}>
               <NeonButton color="#ff8c00" size="lg" onClick={() => setScreen('pong-single')} delay={0.10}>
-                SINGLEPLAYER
+                {t('singleplayer')}
               </NeonButton>
               <NeonButton color="#ff8c00" size="lg" onClick={() => setScreen('pong-multi')} delay={0.20}>
-                MULTIPLAYER
+                {t('multiplayer')}
               </NeonButton>
               <button
                 onClick={() => setScreen('games')}
@@ -546,9 +566,9 @@ function Home({ socket }) {
           {screen === 'pong-single' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 13, animation: 'fadeUp 0.4s both' }}>
               <div style={subLabelStyle('#ff8c00')}>{t('choose-diff')}</div>
-              <NeonButton color="#ff8c00" to="/pong/easy"   delay={0}>EASY</NeonButton>
-              <NeonButton color="#ff8c00" to="/pong/medium" delay={0.07}>MEDIUM</NeonButton>
-              <NeonButton color="#ff8c00" to="/pong/hard"   delay={0.14}>HARD</NeonButton>
+              <NeonButton color="#ff8c00" to="/pong/easy"   delay={0}>{t('easy')}</NeonButton>
+              <NeonButton color="#ff8c00" to="/pong/medium" delay={0.07}>{t('medium')}</NeonButton>
+              <NeonButton color="#ff8c00" to="/pong/hard"   delay={0.14}>{t('hard')}</NeonButton>
               <button
                 onClick={() => setScreen('pong')}
                 style={backBtnStyle}
@@ -560,10 +580,10 @@ function Home({ socket }) {
 
           {screen === 'pong-multi' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 13, animation: 'fadeUp 0.4s both' }}>
-              <div style={subLabelStyle('#ff8c00')}>CHOOSE MODE</div>
-              <NeonButton color="#ff8c00" to="/pong/local"   delay={0}>LOCAL</NeonButton>
-              <NeonButton color="#ff8c00" to="/pong/friend"  delay={0.07}>WITH FRIEND</NeonButton>
-              <NeonButton color="#ff8c00" to="/pong/random"  delay={0.14}>RANDOM OPPONENT</NeonButton>
+              <div style={subLabelStyle('#ff8c00')}>{t('choose-mode')}</div>
+              <NeonButton color="#ff8c00" to="/pong/local"   delay={0}>{t('local')}</NeonButton>
+              <NeonButton color="#ff8c00" to="/pong/friend"  delay={0.07}>{t('with-friend')}</NeonButton>
+              <NeonButton color="#ff8c00" to="/pong/random"  delay={0.14}>{t('random-opponent')}</NeonButton>
               <button
                 onClick={() => setScreen('pong')}
                 style={backBtnStyle}
@@ -576,10 +596,10 @@ function Home({ socket }) {
           {screen === 'pacman' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 18, animation: 'fadeUp 0.4s both' }}>
               <NeonButton color="#cc00ff" size="lg" to="/pacman" delay={0.10}>
-                SINGLEPLAYER
+                {t('singleplayer')}
               </NeonButton>
               <NeonButton color="#cc00ff" size="lg" onClick={() => setScreen('pacman-multi')} delay={0.20}>
-                MULTIPLAYER
+                {t('multiplayer')}
               </NeonButton>
               <button
                 onClick={() => setScreen('games')}
@@ -592,11 +612,42 @@ function Home({ socket }) {
 
           {screen === 'pacman-multi' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 13, animation: 'fadeUp 0.4s both' }}>
-              <div style={subLabelStyle('#cc00ff')}>CHOOSE MODE</div>
-              <NeonButton color="#cc00ff" to="/pacman/friend" delay={0}>WITH FRIEND</NeonButton>
-              <NeonButton color="#cc00ff" to="/pacman/random" delay={0.07}>RANDOM OPPONENT</NeonButton>
+              <div style={subLabelStyle('#cc00ff')}>{t('choose-mode')}</div>
+              <NeonButton color="#cc00ff" to="/pacman/friend" delay={0}>{t('with-friend')}</NeonButton>
+              <NeonButton color="#cc00ff" to="/pacman/random" delay={0.07}>{t('random-opponent')}</NeonButton>
               <button
                 onClick={() => setScreen('pacman')}
+                style={backBtnStyle}
+                onMouseEnter={e => e.currentTarget.style.color = 'rgba(188, 222, 241, 0.85)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.32)'}
+              >{t('back')}</button>
+            </div>
+          )}
+
+          {screen === 'tetris' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 18, animation: 'fadeUp 0.4s both' }}>
+              <NeonButton color="#ff2d78" size="lg" to="/tetris" delay={0.10}>
+                {t('singleplayer')}
+              </NeonButton>
+              <NeonButton color="#ff2d78" size="lg" onClick={() => setScreen('tetris-multi')} delay={0.20}>
+                {t('multiplayer')}
+              </NeonButton>
+              <button
+                onClick={() => setScreen('games')}
+                style={backBtnStyle}
+                onMouseEnter={e => e.currentTarget.style.color = 'rgba(188, 222, 241, 0.85)'}
+                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.32)'}
+              >{t('back')}</button>
+            </div>
+          )}
+
+          {screen === 'tetris-multi' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 13, animation: 'fadeUp 0.4s both' }}>
+              <div style={subLabelStyle('#ff2d78')}>{t('choose-mode')}</div>
+              <NeonButton color="#ff2d78" to="/tetris/friend" delay={0}>{t('with-friend')}</NeonButton>
+              <NeonButton color="#ff2d78" to="/tetris/random" delay={0.07}>{t('random-opponent')}</NeonButton>
+              <button
+                onClick={() => setScreen('tetris')}
                 style={backBtnStyle}
                 onMouseEnter={e => e.currentTarget.style.color = 'rgba(188, 222, 241, 0.85)'}
                 onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.32)'}
